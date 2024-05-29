@@ -28,3 +28,8 @@ FLUSH PRIVILEGES;
 Import DB (have not tested): `mysql -u movieapp -p moviedb < moviedb.sql`
 
 Export DB:  `mysqldump -u movieapp -p moviedb > moviedb.sql`
+
+## Commands for Mac
+
+To run the sql server: sudo /usr/local/mysql/bin/mysql -u root -p
+
