@@ -1,4 +1,4 @@
-Populate the Popular Movie Table Script
+Popular Movie Table Script
 
 import pandas as pd
 import sys
