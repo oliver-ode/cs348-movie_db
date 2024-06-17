@@ -1,0 +1,23 @@
+PopularMovies Table Script: 
+
+import pandas as pd
+import sys
+
+def extract_title_column(input_csv, output_csv):
+    # Read the input CSV file into a DataFrame
+    df = pd.read_csv(input_csv)
+    
+    # Select the 'title' column and rename it to 'tmdbTitle'
+    df = df[['title']].rename(columns={'title': 'tmdbTitle'})
+    
+    # Save the modified DataFrame to a new CSV file
+    df.to_csv(output_csv, index=False)
+    print(f"Modified CSV has been saved to {output_csv}")
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("Usage: python script.py <input_csv_file> <output_csv_file>")
+    else:
+        input_csv_file = sys.argv[1]
+        output_csv_file = sys.argv[2]
+        extract_title_column(input_csv_file, output_csv_file)
