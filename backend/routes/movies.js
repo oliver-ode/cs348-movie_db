@@ -8,7 +8,7 @@ const MAX_MOVIES_TO_CHOOSE_FROM = 1000;
 Router.get("/getFormat", (req, res) => {
   let sql = ''
   mysqlConnection.query(
-    "SELECT * FROM dailyMovies WHERE challengeDate=CURDATE();",
+    "SELECT * FROM motds WHERE challengeDate=CURDATE();",
     (err, results, fields) => {
       if (!err) {
         let selectID;
@@ -17,7 +17,7 @@ Router.get("/getFormat", (req, res) => {
           let cont = true;
           while (cont) {
             selectID = Math.floor(Math.random() * MAX_MOVIES_TO_CHOOSE_FROM + 1);
-            sql = "SELECT * FROM dailyMovies WHERE selectID=?;";
+            sql = "SELECT * FROM motds WHERE selectID=?;";
             cont = false;
             mysqlConnection.query(sql, [selectID],
               (err_, results_, fields_) => {
@@ -30,17 +30,17 @@ Router.get("/getFormat", (req, res) => {
               }
             );
           }
-          sql = 'INSERT INTO dailyMovies VALUES (CURDATE(), ?);';
+          sql = 'INSERT INTO motds VALUES (CURDATE(), ?);';
           mysqlConnection.query(sql, [selectID],
             (err_, results_, fields_) => {
-              if (err_) console.error("Could not insert into dailyMovies")
+              if (err_) console.error(`Could not insert into motds. Error ${err_}`)
             }
           );
         }
         else {
           selectID = results[0]['selectID'];
         }
-        sql = "SELECT mlTitle FROM tmdbPopularMovies tmdbpm, idLinks idl, mlMoviesWithYears mlmwy WHERE ?=tmdbpm.selectID AND tmdbpm.tmdbID=idl.tmdbID AND idl.mlID=mlmwy.mlID";
+        sql = "SELECT mlTitle FROM popularMovies pm, idLinks idl, mlMovies mlm WHERE ?=pm.selectID AND pm.tmdbID=idl.tmdbID AND idl.mlID=mlm.mlID";
         mysqlConnection.query(sql, [selectID],
           (err_, results_, fields) => {
             if (!err_) {
