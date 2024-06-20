@@ -71,6 +71,16 @@ CREATE TABLE IF NOT EXISTS idLinks (
     PRIMARY KEY (mlID, imdbID, tmdbID)
 );
 
+-- Create the guesses table if it doesn't exist
+CREATE TABLE IF NOT EXISTS guesses (
+    challengeDate DATE,
+    userCookie CHAR(36),
+    guessNumber INT,
+    mlID INT,
+    PRIMARY KEY (challengeDate, userCookie, guessNumber),
+    FOREIGN KEY (mlID) REFERENCES mlMoviesWithYears(mlID)
+);
+
 -- Load data into tables
 LOAD DATA LOCAL INFILE 'mlMoviesWithYears_sample.csv'
 INTO TABLE mlMoviesWithYears
