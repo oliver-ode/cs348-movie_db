@@ -1,11 +1,13 @@
 -- Define the guessed movie title
 SET @user_guess = 'Jumanji'; -- Replace with actual user input
 
--- Step 1: Retrieve the mlID for the guessed movie
+-- Step 1: Retrieve the mlID for the guessed movie using selectID
 WITH guessed_movie AS (
-    SELECT mlID
-    FROM mlMoviesWithYears
-    WHERE mlTitle = @user_guess
+    SELECT i.mlID
+    FROM mlMoviesWithYears m
+    JOIN idLinks i ON m.mlID = i.mlID
+    JOIN tmdbPopularMovies t ON i.tmdbID = t.tmdbID
+    WHERE m.mlTitle = @user_guess
 )
 -- Step 2: Retrieve the basic information about the guessed movie
 SELECT 
