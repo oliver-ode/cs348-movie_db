@@ -3,15 +3,56 @@ const mysqlConnection = require("../utils/database");
 
 const Router = express.Router();
 
-Router.get("/", (req, res) => {
+const MAX_MOVIES_TO_CHOOSE_FROM = 1000;
+
+Router.get("/getFormat", (req, res) => {
+  let sql = ''
   mysqlConnection.query(
-    "SELECT * FROM movie",
+    "SELECT * FROM dailyMovies WHERE challengeDate=CURDATE();",
     (err, results, fields) => {
       if (!err) {
-        res.send(results);
-      } else {
-        console.log(err);
-      }
+        let selectID;
+        // Generate a new movie of the day
+        if (results.length == 0) {
+          let cont = true;
+          while (cont) {
+            selectID = Math.floor(Math.random() * MAX_MOVIES_TO_CHOOSE_FROM + 1);
+            sql = "SELECT * FROM dailyMovies WHERE selectID=?;";
+            cont = false;
+            mysqlConnection.query(sql, [selectID],
+              (err_, results_, fields_) => {
+                if (!err_) {
+                  cont = results_.length != 0;
+                } else {
+                  console.error(err_);
+                  cont = false;
+                }
+              }
+            );
+          }
+          sql = 'INSERT INTO dailyMovies VALUES (CURDATE(), ?);';
+          mysqlConnection.query(sql, [selectID],
+            (err_, results_, fields_) => {
+              if (err_) console.error("Could not insert into dailyMovies")
+            }
+          );
+        }
+        else {
+          selectID = results[0]['selectID'];
+        }
+        sql = "SELECT mlTitle FROM tmdbPopularMovies tmdbpm, idLinks idl, mlMoviesWithYears mlmwy WHERE ?=tmdbpm.selectID AND tmdbpm.tmdbID=idl.tmdbID AND idl.mlID=mlmwy.mlID";
+        mysqlConnection.query(sql, [selectID],
+          (err_, results_, fields) => {
+            if (!err_) {
+              if (results_.length == 1) {
+                res.send({'titleFormat': results_[0]['mlTitle'].replace(/[^\s-]/gi, '_').split('').join(' ')});
+              } else {
+                console.error('Does not exist or exists too many times');
+              }
+            } else console.error(err_);
+          }
+        );
+      } else console.error(err);
     }
   );
 });
