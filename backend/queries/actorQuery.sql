@@ -2,11 +2,13 @@
 SET @challenge_date = '2024-06-19'; -- Adjust date as necessary
 SET @guessed_movie_title = 'Ocean\'s Eleven'; -- Replace with actual user input
 
--- Step 1: Retrieve the mlID of today's movie
+-- Step 1: Retrieve the mlID of today's movie using selectID
 WITH movie_of_the_day AS (
-    SELECT mlID
-    FROM dailyMovies
-    WHERE challengeDate = @challenge_date
+    SELECT i.mlID
+    FROM dailyMovies d
+    JOIN tmdbPopularMovies t ON d.selectID = t.selectID
+    JOIN idLinks i ON t.tmdbID = i.tmdbID
+    WHERE d.challengeDate = @challenge_date
 ),
 
 -- Step 2: Retrieve the actors from today's movie
@@ -19,9 +21,11 @@ today_actors AS (
 
 -- Step 3: Retrieve the mlID of the guessed movie
 guessed_movie AS (
-    SELECT mlID
-    FROM mlMoviesWithYears
-    WHERE mlTitle = @guessed_movie_title
+    SELECT i.mlID
+    FROM mlMoviesWithYears m
+    JOIN idLinks i ON m.mlID = i.mlID
+    JOIN tmdbPopularMovies t ON i.tmdbID = t.tmdbID
+    WHERE m.mlTitle = @guessed_movie_title
 ),
 
 -- Step 4: Retrieve the actors from the guessed movie

@@ -4,16 +4,18 @@ SET @guessed_movie_title = 'Toy Story'; -- Replace with actual user input
 
 -- Step 1: Retrieve the mlID of today's movie
 WITH movie_of_the_day AS (
-    SELECT mlID
-    FROM dailyMovies
-    WHERE challengeDate = @challenge_date
+    SELECT i.mlID
+    FROM dailyMovies d
+    JOIN tmdbPopularMovies t ON d.selectID = t.selectID
+    JOIN idLinks i ON t.tmdbID = i.tmdbID
+    WHERE d.challengeDate = @challenge_date
 ),
 
 -- Step 2: Get genres for the movie of the day
 movie_of_the_day_genres AS (
-    SELECT genre
-    FROM genre
-    WHERE mlID = (SELECT mlID FROM movie_of_the_day)
+    SELECT g.genre
+    FROM genre g
+    JOIN movie_of_the_day m ON g.mlID = m.mlID
 ),
 
 -- Step 3: Retrieve the mlID of the guessed movie
@@ -25,9 +27,9 @@ guessed_movie AS (
 
 -- Step 4: Get genres for the guessed movie
 guessed_movie_genres AS (
-    SELECT genre
-    FROM genre
-    WHERE mlID = (SELECT mlID FROM guessed_movie)
+    SELECT g.genre
+    FROM genre g
+    JOIN guessed_movie gm ON g.mlID = gm.mlID
 )
 
 -- Step 5: Find the overlapping genres
