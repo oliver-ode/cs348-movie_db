@@ -19,10 +19,12 @@ today_actors AS (
     WHERE il.mlID = (SELECT mlID FROM movie_of_the_day)
 ),
 
--- Step 3: Retrieve the mlID of the guessed movie
+-- Step 3: Retrieve the mlID of the guessed movie using selectID
 guessed_movie AS (
-    SELECT m.mlID
+    SELECT i.mlID
     FROM mlMoviesWithYears m
+    JOIN idLinks i ON m.mlID = i.mlID
+    JOIN tmdbPopularMovies t ON i.tmdbID = t.tmdbID
     WHERE m.mlTitle = @guessed_movie_title
 ),
 
@@ -34,7 +36,7 @@ guessed_movie_actors AS (
     WHERE il.mlID = (SELECT mlID FROM guessed_movie)
 )
 
--- Step 5: list the actors that are in both guessed movie and todays movie
+-- Step 5: List the actors that are in both guessed movie and today's movie
 SELECT ga.actorName 
-FROM guessed_movie_actors ga 
-WHERE ga.mlID = (SELECT mlID FROM today_actors)
+FROM guessed_movie_actors ga
+WHERE ga.actorID IN (SELECT ta.actorID FROM today_actors ta);
