@@ -38,7 +38,7 @@ guessed_movie_actors AS (
 all_today_actor_movies AS (
     SELECT DISTINCT ia.imdbID 
     FROM imdbActors ia 
-    WHERE ia.actorID IN (SELECT actorID FROM today_actors ta)
+    WHERE ia.actorID IN (SELECT actorID FROM today_actors)
 ),
 
 --Step 6: Find all actors of any movies that todays movie actors have been in
