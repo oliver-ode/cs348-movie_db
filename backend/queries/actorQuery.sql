@@ -21,10 +21,8 @@ today_actors AS (
 
 -- Step 3: Retrieve the mlID of the guessed movie
 guessed_movie AS (
-    SELECT i.mlID
+    SELECT m.mlID
     FROM mlMoviesWithYears m
-    JOIN idLinks i ON m.mlID = i.mlID
-    JOIN tmdbPopularMovies t ON i.tmdbID = t.tmdbID
     WHERE m.mlTitle = @guessed_movie_title
 ),
 
@@ -33,17 +31,24 @@ guessed_movie_actors AS (
     SELECT a.actorID, a.actorName
     FROM imdbActors a
     JOIN idLinks il ON a.imdbID = il.imdbID
-    WHERE il.mlID = (SELECT mlID FROM guessed_movie)
+    WHERE a.mlID = (SELECT mlID FROM guessed_movie)
+),
+
+--Step 5: Find all imdb movies that todays movie actors have been in 
+all_today_actor_movies AS (
+    SELECT DISTINCT ia.imdbID 
+    FROM imdbActors ia 
+    WHERE ia.actorID IN (SELECT actorID FROM today_actors ta)
+),
+
+--Step 6: Find all actors of any movies that todays movie actors have been in
+actors_acted_with_today_movie_actors AS (
+    SELECT DISTINCT ia.actorID 
+    FROM imdbActors ia 
+    WHERE ia.imdbID IN (SELECT imdbID FROM all_today_actor_movies)
 )
 
--- Step 5: Find and list actors from the guessed movie who have acted with actors from today's movie in different movies
-SELECT DISTINCT
-    ga.actorName AS GuessedMovieActor,
-    ta.actorName AS SecretMovieActor
-FROM guessed_movie_actors ga
-JOIN imdbActors ia1 ON ga.actorID = ia1.actorID
-JOIN idLinks il1 ON ia1.imdbID = il1.imdbID
-JOIN imdbActors ta ON il1.imdbID = ta.imdbID
-JOIN idLinks il2 ON ta.imdbID = il2.imdbID
-JOIN today_actors ta2 ON ta.actorID = ta2.actorID
-WHERE il1.mlID != il2.mlID; -- Ensure that the movies are different
+--Step 7: Return guessed movie actors who have been in movies that 
+SELECT DISTINCT ga.actorName as GuessedMovieActor
+FROM guessed_movie_actors ga 
+WHERE ga.actorID IN (SELECT actorID FROM actors_acted_with_today_movie_actors)
