@@ -1,6 +1,6 @@
 -- Set the variable for the challenge date
 SET @challenge_date = '2024-06-19'; -- Adjust date as necessary
-SET @cookie = 11bf5b37-e0b8-42e0-8dcf-dc8c4aefc000; -- Adjust user cookie as necessary
+SET @cookie = '11bf5b37-e0b8-42e0-8dcf-dc8c4aefc000'; -- Adjust user cookie as necessary
 SET @guess_number = 1; -- Adjust guess number as necessary
 
 -- Step 1: Retrieve the tagIDs and tagScores of guessed movie
