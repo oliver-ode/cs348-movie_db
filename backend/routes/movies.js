@@ -4,11 +4,12 @@ const mysqlConnection = require("../utils/database");
 const Router = express.Router();
 
 const MAX_MOVIES_TO_CHOOSE_FROM = 1000;
+const MAX_GUESSES = 10;
 
 Router.get("/getFormat", (req, res) => {
   let sql = ''
   mysqlConnection.query(
-    "SELECT * FROM motds WHERE challengeDate=CURDATE();",
+    "SELECT * FROM dailyMovies WHERE challengeDate=CURDATE();",
     (err, results, fields) => {
       if (!err) {
         let selectID;
@@ -17,7 +18,7 @@ Router.get("/getFormat", (req, res) => {
           let cont = true;
           while (cont) {
             selectID = Math.floor(Math.random() * MAX_MOVIES_TO_CHOOSE_FROM + 1);
-            sql = "SELECT * FROM motds WHERE selectID=?;";
+            sql = "SELECT * FROM dailyMovies WHERE selectID=?;";
             cont = false;
             mysqlConnection.query(sql, [selectID],
               (err_, results_, fields_) => {
@@ -30,17 +31,17 @@ Router.get("/getFormat", (req, res) => {
               }
             );
           }
-          sql = 'INSERT INTO motds VALUES (CURDATE(), ?);';
+          sql = 'INSERT INTO dailyMovies VALUES (CURDATE(), ?);';
           mysqlConnection.query(sql, [selectID],
             (err_, results_, fields_) => {
-              if (err_) console.error(`Could not insert into motds. Error ${err_}`)
+              if (err_) console.error(`Could not insert into dailyMovies. Error ${err_}`)
             }
           );
         }
         else {
           selectID = results[0]['selectID'];
         }
-        sql = "SELECT mlTitle FROM popularMovies pm, idLinks idl, mlMovies mlm WHERE ?=pm.selectID AND pm.tmdbID=idl.tmdbID AND idl.mlID=mlm.mlID";
+        sql = "SELECT mlTitle FROM tmdbPopularMovies pm, idLinks idl, mlMoviesWithYears mlm WHERE ?=pm.selectID AND pm.tmdbID=idl.tmdbID AND idl.mlID=mlm.mlID";
         mysqlConnection.query(sql, [selectID],
           (err_, results_, fields) => {
             if (!err_) {
@@ -55,6 +56,50 @@ Router.get("/getFormat", (req, res) => {
       } else console.error(err);
     }
   );
+});
+
+Router.get("/titleSearch", (req, res) => {
+  let params = req.query;
+  const sql = "SELECT * FROM mlMoviesWithYears WHERE mlTitle LIKE ? LIMIT 5;";
+  mysqlConnection.query(sql, ['%'+params.title+'%'],
+    (err, results, fields) => {
+      if (!err) {
+        console.log(Object.values(JSON.parse(JSON.stringify(results))))
+        res.send({'results': Object.values(JSON.parse(JSON.stringify(results)))});
+      } else {
+        console.log(err);
+      }
+    }
+  );
+});
+
+Router.post("/makeGuess", (req, res) => {
+  let body = req.body;
+  let sql = "SELECT max(guessNumber) maxGuessNumber FROM guesses WHERE challengeDate='2024-07-05' AND userCookie=? GROUP BY challengeDate, userCookie;";
+  mysqlConnection.query(sql, [body.userID],
+    (err, results, fields) => {
+      if (!err) {
+        if (results[0]['maxGuessNumber'] >= MAX_GUESSES) {
+          res.send({'result': 'FAILED'})
+          return; // I think this will short circuit out and not run next sql query?
+        }
+      } else {
+        console.log(err);
+      }
+    }
+  );
+
+  // sql = "INSERT INTO guesses VALUES (CURDATE(), ?, (SELECT mgn FROM (SELECT MAX(guessNumber)+1 mgn FROM guesses WHERE userCookie=? AND challengeDate=CURDATE()) t), ?)";
+  // mysqlConnection.query(sql, [body.userID, body.userID, body.guessMLID],
+  //   (err, results, fields) => {
+  //     if (!err) {
+  //       console.log("success")
+  //       // TODO: check to see if guess was right and return information for help if not
+  //     } else {
+  //       console.log(err);
+  //     }
+  //   }
+  // );
 });
 
 // Router.post("/", (req, res) => {

@@ -2,8 +2,13 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import Cookies from 'universal-cookie';
 import { v4 as uuidv4 } from 'uuid';
+import Example from './SearchComp'
 
 function App() {
+  const upArrow = '↑';
+  const downArrow = '↓';
+
+
   const cookies = new Cookies(null, { path: '/' });
   if (!cookies.get('userID'))
     cookies.set('userID', uuidv4(), {expires: new Date(new Date().setFullYear(new Date().getFullYear() + 50))});
@@ -16,14 +21,34 @@ function App() {
         .catch((err) => {console.log(err)});
   }, []);
 
-  const upArrow = '↑';
-  const downArrow = '↓';
+  const [guessMLID, setGuessMLID] = useState(-1);
+  const searchClick = () => {
+    fetch('http://localhost:4000/makeGuess', {method: 'post', headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userID: cookies.get('userID'),
+        guessMLID: guessMLID
+      })
+    })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data['result'] == 'FAILED') {
+        // do something? popup?
+      }
+      else {
+        // if correct show if not show
+      }
+    })
+  };
 
   return (
     <div className="App">
       <p style={{whiteSpace: 'pre'}}>{movieGuessFormat}</p>
       <div>
-        <input name="guess" placeholder={"Search movies here"}/>
+        <Example setGuessMLID={setGuessMLID}/>
+        <button onClick={searchClick}>Search</button>
         <button>Give up</button>
       </div>
       <div className='table'>
