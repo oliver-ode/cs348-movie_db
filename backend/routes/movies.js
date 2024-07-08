@@ -64,7 +64,6 @@ Router.get("/titleSearch", (req, res) => {
   mysqlConnection.query(sql, ['%'+params.title+'%'],
     (err, results, fields) => {
       if (!err) {
-        console.log(Object.values(JSON.parse(JSON.stringify(results))))
         res.send({'results': Object.values(JSON.parse(JSON.stringify(results)))});
       } else {
         console.log(err);
@@ -75,11 +74,11 @@ Router.get("/titleSearch", (req, res) => {
 
 Router.post("/makeGuess", (req, res) => {
   let body = req.body;
-  let sql = "SELECT max(guessNumber) maxGuessNumber FROM guesses WHERE challengeDate='2024-07-05' AND userCookie=? GROUP BY challengeDate, userCookie;";
+  let sql = "SELECT COUNT(*) totalGuesses FROM guesses WHERE challengeDate=CURDATE() AND userCookie=?;";
   mysqlConnection.query(sql, [body.userID],
     (err, results, fields) => {
       if (!err) {
-        if (results[0]['maxGuessNumber'] >= MAX_GUESSES) {
+        if (results[0]['totalGuesses'] >= MAX_GUESSES) {
           res.send({'result': 'FAILED'})
           return; // I think this will short circuit out and not run next sql query?
         }
@@ -89,17 +88,17 @@ Router.post("/makeGuess", (req, res) => {
     }
   );
 
-  // sql = "INSERT INTO guesses VALUES (CURDATE(), ?, (SELECT mgn FROM (SELECT MAX(guessNumber)+1 mgn FROM guesses WHERE userCookie=? AND challengeDate=CURDATE()) t), ?)";
-  // mysqlConnection.query(sql, [body.userID, body.userID, body.guessMLID],
-  //   (err, results, fields) => {
-  //     if (!err) {
-  //       console.log("success")
-  //       // TODO: check to see if guess was right and return information for help if not
-  //     } else {
-  //       console.log(err);
-  //     }
-  //   }
-  // );
+  sql = "INSERT INTO guesses VALUES (CURDATE(), ?, (SELECT mgn FROM (SELECT COUNT(*)+1 mgn FROM guesses WHERE userCookie=? AND challengeDate=CURDATE()) t), ?)";
+  mysqlConnection.query(sql, [body.userID, body.userID, body.guessMLID],
+    (err, results, fields) => {
+      if (!err) {
+        console.log("success")
+        // TODO: check to see if guess was right and return information for help if not
+      } else {
+        console.log(err);
+      }
+    }
+  );
 });
 
 // Router.post("/", (req, res) => {
