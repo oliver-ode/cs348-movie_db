@@ -5,6 +5,7 @@ const Router = express.Router();
 
 const MAX_MOVIES_TO_CHOOSE_FROM = 1000;
 const MAX_GUESSES = 10;
+const MAX_SEARCH_RETURN = 10;
 
 Router.get("/getFormat", (req, res) => {
   let sql = ''
@@ -60,8 +61,8 @@ Router.get("/getFormat", (req, res) => {
 
 Router.get("/titleSearch", (req, res) => {
   let params = req.query;
-  const sql = "SELECT * FROM mlMoviesWithYears WHERE mlTitle LIKE ? LIMIT 5;";
-  mysqlConnection.query(sql, ['%'+params.title+'%'],
+  const sql = "SELECT * FROM mlMoviesWithYears WHERE mlTitle LIKE ? LIMIT ?;";
+  mysqlConnection.query(sql, ['%'+params.title+'%', MAX_SEARCH_RETURN],
     (err, results, fields) => {
       if (!err) {
         res.send({'results': Object.values(JSON.parse(JSON.stringify(results)))});
