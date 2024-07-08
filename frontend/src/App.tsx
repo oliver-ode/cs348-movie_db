@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import Cookies from 'universal-cookie';
 import { v4 as uuidv4 } from 'uuid';
-import Example from './SearchComp'
+import Example from './SearchComp';
+import logo from './assets/FlickFindLogo.png';
 
 function App() {
   const upArrow = '↑';
   const downArrow = '↓';
-
 
   const cookies = new Cookies(null, { path: '/' });
   if (!cookies.get('userID'))
@@ -22,34 +22,59 @@ function App() {
   }, []);
 
   const [guessMLID, setGuessMLID] = useState(-1);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      searchClick();
+    }
+  };
+
   const searchClick = () => {
-    fetch('http://localhost:4000/makeGuess', {method: 'post', headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
+    fetch('http://localhost:4000/makeGuess', {
+      method: 'post',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         userID: cookies.get('userID'),
-        guessMLID: guessMLID
+        guessMLID: guessMLID,
+        searchTerm: searchTerm
       })
     })
     .then((response) => response.json())
     .then((data) => {
-      if (data['result'] == 'FAILED') {
-        // do something? popup?
+      if (data['result'] === 'FAILED') {
+        // Handle failure
+      } else {
+        // Handle success
       }
-      else {
-        // if correct show if not show
-      }
-    })
+    });
   };
 
   return (
     <div className="App">
+      <header className="App-header">
+        <img src={logo} className="App-logo" alt="Flick Find Logo" />
+      </header>
       <p style={{whiteSpace: 'pre'}}>{movieGuessFormat}</p>
-      <div>
-        <Example setGuessMLID={setGuessMLID}/>
-        <button onClick={searchClick}>Search</button>
-        <button>Give up</button>
+      <div className="search-container">
+        <div className="search-input-wrapper">
+          <input
+            type="text"
+            placeholder="Search movies here"
+            value={searchTerm}
+            onChange={handleSearchInputChange}
+            onKeyPress={handleKeyPress}
+          />
+          <span className="search-icon">&#128269;</span>
+        </div>
+        <button className="give-up-button">Give up</button>
       </div>
       <div className='table'>
         <div className='row'>
