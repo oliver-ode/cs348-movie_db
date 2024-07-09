@@ -194,6 +194,37 @@ Router.get("/titleSearch", (req, res) => {
   );
 });
 
+Router.get("/revealMOTD", (req, res) => {
+  let sql = "CALL getMOTD(CURDATE());";
+  mysqlConnection.query(sql,
+    (err, results, fields) => {
+      if (!err) {
+        res.send({'MOTD': Object.values(JSON.parse(JSON.stringify(results)))[0]})
+      } else {
+        console.log(err);
+      }
+    }
+  )
+}
+);
+
+Router.get("/giveUp", (req, res) => {
+  console.log("hello");
+  let body = req.body;
+  let sql = "CALL giveUpFill(CURDATE(), ?);";
+  mysqlConnection.query(sql, [body.userID],
+    (err, results, fields) => {
+      if (!err){
+        res.sendStatus(204);
+      }
+      else{
+        console.log(err);
+      }
+    }
+  )
+}
+);
+
 Router.post("/makeGuess", (req, res) => {
   let body = req.body;
   let sql = "SELECT COUNT(*) totalGuesses FROM guesses WHERE challengeDate=CURDATE() AND userCookie=?;";

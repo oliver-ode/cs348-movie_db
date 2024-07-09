@@ -22,7 +22,14 @@ function App() {
         .catch((err) => {console.log(err)});
   }, []);
 
+<<<<<<< HEAD
+  const [guessMLID, setGuessMLID] = useState(-1);
+  const [isSearchContainerHidden, setIsSearchContainerHidden] = useState(false);
+
+  const searchClick = () => {
+=======
   const makeGuess = () => {
+>>>>>>> 91b75881f46133af49fb1caac051c725583b2729
     fetch('http://localhost:4000/makeGuess', {method: 'post', headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
@@ -42,6 +49,38 @@ function App() {
     });
   };
 
+<<<<<<< HEAD
+  const revealMovie = () => {
+    fetch('http://localhost:4000/revealMOTD', {
+      method: 'get',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      
+      console.log(data);
+    })
+    .catch(err => {
+      console.log(err);
+    });
+  }
+
+  const giveUpClick = () => {
+    setIsSearchContainerHidden(true);
+    fetch('http://localhost:4000/titleSearch?' + new URLSearchParams({'userID': cookies.get('userID')}))
+    .then((data) => {
+      revealMovie();
+    })
+    .catch(err => {
+      console.log(err);
+    });
+
+  };
+
+=======
   function addGuessedRow() {
     setGuessRows([Row(
       {
@@ -82,18 +121,19 @@ function App() {
     ), ...guessRows]);
   }
 
+>>>>>>> 91b75881f46133af49fb1caac051c725583b2729
   return (
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="Flick Find Logo" />
       </header>
       <p style={{whiteSpace: 'pre'}}>{movieGuessFormat}</p>
-      <div className="search-container">
+      <div className="search-container" style={{ display: isSearchContainerHidden ? 'none' : 'block' }}>
         <div className="search-input-wrapper">
           <SearchBar setGuessMLID={setGuessMLID}/>
           <span className="search-icon" onClick={makeGuess}>&#128269;</span>
         </div>
-        <button className="give-up-button">Give up</button>
+        <button className="give-up-button" onClick={giveUpClick}>Give up</button>
       </div>
       <div className='table'>
         <div className='row'>
