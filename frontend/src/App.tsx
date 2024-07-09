@@ -12,6 +12,9 @@ function App() {
     cookies.set('userID', uuidv4(), {expires: new Date(new Date().setFullYear(new Date().getFullYear() + 50))});
 
   const [movieGuessFormat, setMovieGuessFormat] = useState([]);
+  const [guessMLID, setGuessMLID] = useState(-1);
+  const [guessRows, setGuessRows] = useState<React.ReactElement[]>([]);
+
   useEffect(() => {
      fetch('http://localhost:4000/getFormat')
         .then((response) => response.json())
@@ -19,9 +22,7 @@ function App() {
         .catch((err) => {console.log(err)});
   }, []);
 
-  const [guessMLID, setGuessMLID] = useState(-1);
-
-  const searchClick = () => {
+  const makeGuess = () => {
     fetch('http://localhost:4000/makeGuess', {method: 'post', headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
@@ -40,9 +41,6 @@ function App() {
       }
     });
   };
-
-  const [guessRows, setGuessRows] = useState<React.ReactElement[]>([]);
-  
 
   function addGuessedRow() {
     setGuessRows([Row(
@@ -93,9 +91,9 @@ function App() {
       <div className="search-container">
         <div className="search-input-wrapper">
           <SearchBar setGuessMLID={setGuessMLID}/>
-          <span className="search-icon" onClick={searchClick}>&#128269;</span>
+          <span className="search-icon" onClick={makeGuess}>&#128269;</span>
         </div>
-        <button className="give-up-button" onClick={addGuessedRow}>Give up</button>
+        <button className="give-up-button">Give up</button>
       </div>
       <div className='table'>
         <div className='row'>
