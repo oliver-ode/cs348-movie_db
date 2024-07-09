@@ -8,10 +8,10 @@ WITH guess_tags AS (
     SELECT ts.tagID, ts.score
     FROM tagScores ts
     JOIN guesses g ON ts.mlID = g.mlID
-    WHERE g.challengeDate = @challenge_date 
-        AND g.userCookie = @cookie
-        AND g.guessNumber = @guess_number
-        AND ts.score > 0.7
+    WHERE g.challengeDate = '2024-07-08' 
+        AND g.userCookie = '49faa1b8-f8d4-4a4f-a68d-315b3de29df6'
+        AND g.guessNumber = 1
+        AND ts.score > 0.5
 ),
 
 -- Step 2: Retrieve the tagIDs and tagScores of the movie of the day using selectID
@@ -22,7 +22,7 @@ motd_tags AS (
         SELECT t.selectID 
         FROM dailyMovies d
         JOIN tmdbPopularMovies t ON d.selectID = t.selectID
-        WHERE d.challengeDate = @challenge_date
+        WHERE d.challengeDate = '2024-07-08' 
     )
     JOIN idLinks il ON il.tmdbID = (
         SELECT t.tmdbID 
@@ -30,7 +30,7 @@ motd_tags AS (
         WHERE t.selectID = dm.selectID
     )
     WHERE ts.mlID = il.mlID 
-        AND ts.score > 0.7
+        AND ts.score > 0.5
 ),
 
 join_tags AS (
@@ -40,7 +40,7 @@ join_tags AS (
 )
 
 -- Step 3: Get the top three tags for the movie of the day
-SELECT t.tagTitle
+SELECT t.tagID, t.tagTitle
 FROM tags t
 JOIN join_tags jt ON t.tagID = jt.tagID
 ORDER BY jt.score DESC
