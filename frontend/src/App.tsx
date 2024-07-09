@@ -44,7 +44,7 @@ function App() {
   const [guessRows, setGuessRows] = useState<React.ReactElement[]>([]);
   
 
-  function aaaa() {
+  function addGuessedRow() {
     setGuessRows([Row(
       {
         "isCorrect": true,
@@ -54,10 +54,8 @@ function App() {
             "name": "20th Century Fox",
             "isCorrect": true
         },
-        "year": {
-            "number": 2010,
-            "yearProximity": "low"
-        },
+        "year": 2010,
+        "yearProximity": "correct",
         "casts": [
             {
                 "name": "First Actor Name",
@@ -66,7 +64,11 @@ function App() {
             {
                 "name": "Second Actor Name",
                 "relativity": "adjacent_movie"
-            }
+            },
+            {
+              "name": "Third Actor Name",
+              "relativity": "no"
+          }
         ],
         "genres": [
             "Genre 1",
@@ -93,7 +95,7 @@ function App() {
           <SearchBar setGuessMLID={setGuessMLID}/>
           <span className="search-icon" onClick={searchClick}>&#128269;</span>
         </div>
-        <button className="give-up-button" onClick={aaaa}>Give up</button>
+        <button className="give-up-button" onClick={addGuessedRow}>Give up</button>
       </div>
       <div className='table'>
         <div className='row'>
