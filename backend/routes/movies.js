@@ -73,6 +73,36 @@ Router.get("/titleSearch", (req, res) => {
   );
 });
 
+Router.get("/revealMOTD", (req, res) => {
+  let sql = "CALL getMOTD(CURDATE());";
+  mysqlConnection.query(sql,
+    (err, results, fields) => {
+      if (!err) {
+        res.send({'MOTD': Object.values(JSON.parse(JSON.stringify(results)))[0]})
+      } else {
+        console.log(err);
+      }
+    }
+  )
+}
+);
+
+Router.get("/giveUp", (req, res) => {
+  let body = req.body;
+  let sql = "CALL giveUpFill(CURDATE(), ?);";
+  mysqlConnection.query(sql, [body.userID],
+    (err, results, fields) => {
+      if (!err){
+        res.sendStatus(204);
+      }
+      else{
+        console.log(err);
+      }
+    }
+  )
+}
+);
+
 Router.post("/makeGuess", (req, res) => {
   let body = req.body;
   let sql = "SELECT COUNT(*) totalGuesses FROM guesses WHERE challengeDate=CURDATE() AND userCookie=?;";
@@ -197,13 +227,14 @@ Router.post("/makeGuess", (req, res) => {
                 WHERE ia.imdbID IN (SELECT imdbID FROM all_today_actor_movies)\
                 )\
                 SELECT ga.actorName, \
+                ga.actorID, \
                 CASE \
                   WHEN ga.actorID IN (SELECT actorID FROM today_actors) THEN 'same'\
                   WHEN ga.actorID IN (SELECT actorID FROM actors_acted_with_today_movie_actors) THEN 'adjacent'\
                   WHEN ga.actorID NOT IN (SELECT actorID FROM today_actors) AND ga.actorID NOT IN (SELECT actorID FROM actors_acted_with_today_movie_actors) THEN 'no'\
                 END AS proximity \
                 FROM guessed_movie_actors ga;"
-              
+                
                 mysqlConnection.query(sql, [body.userID, body.userID, body.userID, body.userID, body.userID, body.userID, body.userID, body.userID], (err__, results__, fields__) => {
                   if (err__) {
                     console.error('Error executing query:', err__);

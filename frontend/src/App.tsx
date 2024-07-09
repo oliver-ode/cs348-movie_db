@@ -14,6 +14,7 @@ function App() {
   const [movieGuessFormat, setMovieGuessFormat] = useState([]);
   const [guessMLID, setGuessMLID] = useState(-1);
   const [guessRows, setGuessRows] = useState<React.ReactElement[]>([]);
+  const [isSearchContainerHidden, setIsSearchContainerHidden] = useState(false);
 
   useEffect(() => {
      fetch('http://localhost:4000/getFormat')
@@ -41,9 +42,39 @@ function App() {
       }
     });
   };
+  
+  const revealMovie = () => {
+    fetch('http://localhost:4000/revealMOTD', {
+      method: 'get',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      
+      console.log(data);
+    })
+    .catch(err => {
+      console.log(err);
+    });
+  }
 
+  const giveUpClick = () => {
+    setIsSearchContainerHidden(true);
+    fetch('http://localhost:4000/titleSearch?' + new URLSearchParams({'userID': cookies.get('userID')}))
+    .then((data) => {
+      revealMovie();
+    })
+    .catch(err => {
+      console.log(err);
+    });
+
+  };
+  
   function addGuessedRow(data: {isCorrect: boolean; guess: number; title: string; studio: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }) {
-    setGuessRows([Row(data), ...guessRows]);
+      setGuessRows([Row(data), ...guessRows]);
   }
 
   return (
@@ -52,12 +83,12 @@ function App() {
         <img src={logo} className="App-logo" alt="Flick Find Logo" />
       </header>
       <p style={{whiteSpace: 'pre'}}>{movieGuessFormat}</p>
-      <div className="search-container">
+      <div className="search-container" style={{ display: isSearchContainerHidden ? 'none' : 'block' }}>
         <div className="search-input-wrapper">
           <SearchBar setGuessMLID={setGuessMLID}/>
           <span className="search-icon" onClick={makeGuess}>&#128269;</span>
         </div>
-        <button className="give-up-button">Give up</button>
+        <button className="give-up-button" onClick={giveUpClick}>Give up</button>
       </div>
       <div className='table'>
         <div className='row'>

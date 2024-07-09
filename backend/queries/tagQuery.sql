@@ -1,47 +1,26 @@
 -- Set the variables for the challenge date, user cookie, and guess number
-SET @challenge_date = '2024-06-19'; -- Adjust date as necessary
 SET @cookie = '11bf5b37-e0b8-42e0-8dcf-dc8c4aefc000'; -- Adjust user cookie as necessary
-SET @guess_number = 1; -- Adjust guess number as necessary
 
--- Step 1: Retrieve the tagIDs and tagScores of the guessed movie
 WITH guess_tags AS (
     SELECT ts.tagID, ts.score
     FROM tagScores ts
     JOIN guesses g ON ts.mlID = g.mlID
-    WHERE g.challengeDate = '2024-07-08' 
-        AND g.userCookie = '49faa1b8-f8d4-4a4f-a68d-315b3de29df6'
-        AND g.guessNumber = 1
-        AND ts.score > 0.5
+    WHERE g.challengeDate = CURDATE()
+    AND ts.score > 0.5
+    AND g.userCookie = @cookie
+    AND g.guessNumber = (SELECT COUNT(gs.guessNumber) FROM guesses gs WHERE gs.challengeDate = CURDATE() AND userCookie = @cookie)
 ),
-
--- Step 2: Retrieve the tagIDs and tagScores of the movie of the day using selectID
 motd_tags AS (
-    SELECT ts.tagID, ts.score
-    FROM tagScores ts
-    JOIN dailyMovies dm ON dm.selectID = (
-        SELECT t.selectID 
-        FROM dailyMovies d
-        JOIN tmdbPopularMovies t ON d.selectID = t.selectID
-        WHERE d.challengeDate = '2024-07-08' 
-    )
-    JOIN idLinks il ON il.tmdbID = (
-        SELECT t.tmdbID 
-        FROM tmdbPopularMovies t 
-        WHERE t.selectID = dm.selectID
-    )
-    WHERE ts.mlID = il.mlID 
-        AND ts.score > 0.5
-),
-
-join_tags AS (
-    SELECT gt.tagID, mt.score
-    FROM guess_tags gt
-    JOIN motd_tags mt ON gt.tagID = mt.tagID
+  SELECT ts.tagID
+  FROM dailyMovies dm
+  JOIN tmdbPopularMovies tp ON dm.selectID = tp.selectID
+  JOIN idLinks idl ON tp.tmdbID = idl.tmdbID
+  JOIN tagScores ts ON idl.mlID = ts.mlID
+  WHERE ts.score > 0.5
 )
-
--- Step 3: Get the top three tags for the movie of the day
-SELECT t.tagID, t.tagTitle
+SELECT t.tagTitle
 FROM tags t
-JOIN join_tags jt ON t.tagID = jt.tagID
-ORDER BY jt.score DESC
+JOIN guess_tags gt ON t.tagID = gt.tagID
+JOIN motd_tags mt ON gt.tagID = mt.tagID
+ORDER BY gt.score DESC
 LIMIT 3;
