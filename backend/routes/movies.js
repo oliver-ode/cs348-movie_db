@@ -9,26 +9,17 @@ const MAX_SEARCH_RETURN = 10;
 
 function movieDetails(userID) {
   sql = "WITH guessed_movie AS ( \
-    SELECT g.mlID \
-    FROM guesses g \
-    WHERE g.challengeDate = CURDATE() \
-      AND g.userCookie = ? \
-      AND g.guessNumber = ( \
-        SELECT mgn \
-        FROM (SELECT COUNT(*) AS mgn \
-              FROM guesses \
-              WHERE userCookie = ? \
-                AND challengeDate = CURDATE()) AS subquery1 \
-      ) \
+  SELECT g.mlID \
+  FROM guesses g \
+  WHERE g.challengeDate = CURDATE() \
+    AND g.userCookie = ? \
+    AND g.guessNumber = ( \
+      SELECT mgn \
+      FROM (SELECT COUNT(*) AS mgn \
+            FROM guesses \
+            WHERE userCookie = ? \
+              AND challengeDate = CURDATE()) AS subquery1 \
     ) \
-  ), \
-  daily_movie_year AS ( \
-    SELECT ml.releaseYear \
-    FROM dailyMovies dm \
-    JOIN tmdbPopularMovies tm ON dm.selectID = tm.selectID \
-    JOIN idLinks idl ON tm.tmdbID = idl.tmdbID \
-    JOIN mlMoviesWithYears ml ON idl.mlID = ml.mlID \
-    WHERE dm.challengeDate = CURDATE() \
   ) \
   SELECT \
     0 AS isCorrect, \
@@ -36,11 +27,6 @@ function movieDetails(userID) {
     m.mlTitle AS title, \
     '' AS studio, \
     m.releaseYear AS year, \
-    CASE \
-      WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) > m.releaseYear THEN 'low' \
-      WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) = m.releaseYear THEN 'correct' \
-      WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) < m.releaseYear THEN 'high' \
-    END AS yearProximity, \
     GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts, \
     GROUP_CONCAT(DISTINCT ge.genre ORDER BY ge.genre SEPARATOR ', ') AS genres \
   FROM mlMoviesWithYears m \
@@ -71,17 +57,67 @@ function movieDetails(userID) {
     JOIN idLinks idl ON tp.tmdbID = idl.tmdbID \
     JOIN tagScores ts ON idl.mlID = ts.mlID \
     WHERE ts.score > 0.5 \
-  ), \
-  join_tables AS ( \
-    SELECT gt.tagID, gt.score \
-    FROM guess_tags gt \
-    JOIN motd_tags mt ON gt.tagID = mt.tagID \
-    ORDER BY gt.score DESC \
-    LIMIT 3 \
   ) \
-  SELECT GROUP_CONCAT(DISTINCT t.tagTitle ORDER BY t.tagTitle SEPARATOR ', ') AS tags \
+  SELECT t.tagTitle \
   FROM tags t \
-  JOIN join_tables jt ON t.tagID = jt.tagID;"
+  JOIN guess_tags gt ON t.tagID = gt.tagID \
+  JOIN motd_tags mt ON gt.tagID = mt.tagID \
+  ORDER BY gt.score DESC \
+  LIMIT 3; \
+  \
+  \
+  \
+  WITH guessed_movie AS ( \
+    SELECT g.mlID \
+    FROM guesses g \
+    WHERE g.challengeDate = CURDATE() \
+      AND g.userCookie = ? \
+      AND g.guessNumber = ( \
+        SELECT mgn \
+        FROM (SELECT COUNT(*) AS mgn \
+              FROM guesses \
+              WHERE userCookie = ? \
+                AND challengeDate = CURDATE()) AS subquery1 \
+      ) \
+    ),\
+    movie_of_the_day AS (\
+      SELECT i.mlID\
+      FROM dailyMovies d\
+      JOIN tmdbPopularMovies t ON d.selectID = t.selectID\
+      JOIN idLinks i ON t.tmdbID = i.tmdbID\
+      WHERE d.challengeDate = CURDATE()\
+  ),\
+  today_actors AS (\
+    SELECT a.actorID, a.actorName\
+    FROM imdbActors a\
+    JOIN idLinks il ON a.imdbID = il.imdbID\
+    WHERE il.mlID = (SELECT mlID FROM movie_of_the_day)\
+  ),\
+  guessed_movie_actors AS (\
+    SELECT a.actorID, a.actorName\
+    FROM imdbActors a\
+    JOIN idLinks il ON a.imdbID = il.imdbID\
+    WHERE il.mlID = (SELECT mlID FROM guessed_movie)\
+  ),\
+  all_today_actor_movies AS (\
+  SELECT DISTINCT il.imdbID \
+  FROM imdbActors ia \
+  JOIN idLinks il ON ia.imdbID = il.imdbID\
+  WHERE ia.actorID IN (SELECT actorID FROM today_actors)\
+  ),\
+  actors_acted_with_today_movie_actors AS (\
+  SELECT DISTINCT ia.actorID \
+  FROM imdbActors ia \
+  WHERE ia.imdbID IN (SELECT imdbID FROM all_today_actor_movies)\
+  )\
+  SELECT ga.actorName, \
+  ga.actorID, \
+  CASE \
+    WHEN ga.actorID IN (SELECT actorID FROM today_actors) THEN 'same'\
+    WHEN ga.actorID IN (SELECT actorID FROM actors_acted_with_today_movie_actors) THEN 'adjacent'\
+    WHEN ga.actorID NOT IN (SELECT actorID FROM today_actors) AND ga.actorID NOT IN (SELECT actorID FROM actors_acted_with_today_movie_actors) THEN 'no'\
+  END AS proximity \
+  FROM guessed_movie_actors ga;"
 
   mysqlConnection.query(sql, [userID, userID, userID, userID, userID, userID, userID], (err, results, fields) => {
     if (err) {
