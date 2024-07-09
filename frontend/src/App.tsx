@@ -22,37 +22,23 @@ function App() {
   }, []);
 
   const [guessMLID, setGuessMLID] = useState(-1);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
-  };
-
-  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      searchClick();
-    }
-  };
 
   const searchClick = () => {
-    fetch('http://localhost:4000/makeGuess', {
-      method: 'post',
-      headers: {
+    fetch('http://localhost:4000/makeGuess', {method: 'post', headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         userID: cookies.get('userID'),
-        guessMLID: guessMLID,
-        searchTerm: searchTerm
+        guessMLID: guessMLID
       })
     })
     .then((response) => response.json())
     .then((data) => {
       if (data['result'] === 'FAILED') {
-        // Handle failure
+        // popup showing that guess was not added due to error
       } else {
-        // Handle success
+        // show if guess was correct or wrong
       }
     });
   };
@@ -65,14 +51,8 @@ function App() {
       <p style={{whiteSpace: 'pre'}}>{movieGuessFormat}</p>
       <div className="search-container">
         <div className="search-input-wrapper">
-          <input
-            type="text"
-            placeholder="Search movies here"
-            value={searchTerm}
-            onChange={handleSearchInputChange}
-            onKeyPress={handleKeyPress}
-          />
-          <span className="search-icon">&#128269;</span>
+          <Example setGuessMLID={setGuessMLID}/>
+          <span className="search-icon" onClick={searchClick}>&#128269;</span>
         </div>
         <button className="give-up-button">Give up</button>
       </div>
