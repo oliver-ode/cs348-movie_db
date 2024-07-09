@@ -1,6 +1,6 @@
 -- Set the variables for the challenge date and guessed movie title
-SET @challenge_date = '2024-06-19'; -- Adjust date as necessary
-SET @guessed_movie_title = 'Driving Miss Daisy'; -- Replace with actual user input
+SET @challenge_date = '2024-07-09'; -- Adjust date as necessary
+SET @guessed_movie_title = 'The Place Beyond the Pines'; -- Replace with actual user input
 
 -- Step 1: Retrieve the mlID of today's movie using selectID
 WITH movie_of_the_day AS (

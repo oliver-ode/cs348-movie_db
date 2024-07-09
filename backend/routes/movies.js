@@ -20,6 +20,14 @@ function movieDetails(userID) {
             WHERE userCookie = ? \
               AND challengeDate = CURDATE()) AS subquery1 \
     ) \
+  ), \
+  daily_movie_year AS ( \
+    SELECT ml.releaseYear \
+    FROM dailyMovies dm \
+    JOIN tmdbPopularMovies tm ON dm.selectID = tm.selectID \
+    JOIN idLinks idl ON tm.tmdbID = idl.tmdbID \
+    JOIN mlMoviesWithYears ml ON idl.mlID = ml.mlID \
+    WHERE dm.challengeDate = CURDATE() \
   ) \
   SELECT \
     0 AS isCorrect, \
@@ -27,6 +35,11 @@ function movieDetails(userID) {
     m.mlTitle AS title, \
     '' AS studio, \
     m.releaseYear AS year, \
+    CASE \
+      WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) > m.releaseYear THEN 'low' \
+      WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) = m.releaseYear THEN 'correct' \
+      WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) < m.releaseYear THEN 'high' \
+    END AS yearProximity, \
     GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts, \
     GROUP_CONCAT(DISTINCT ge.genre ORDER BY ge.genre SEPARATOR ', ') AS genres \
   FROM mlMoviesWithYears m \
@@ -57,13 +70,17 @@ function movieDetails(userID) {
     JOIN idLinks idl ON tp.tmdbID = idl.tmdbID \
     JOIN tagScores ts ON idl.mlID = ts.mlID \
     WHERE ts.score > 0.5 \
+  ), \
+  join_tables AS ( \
+    SELECT gt.tagID, gt.score \
+    FROM guess_tags gt \
+    JOIN motd_tags mt ON gt.tagID = mt.tagID \
+    ORDER BY gt.score DESC \
+    LIMIT 3 \
   ) \
-  SELECT t.tagTitle \
+  SELECT GROUP_CONCAT(DISTINCT t.tagTitle ORDER BY t.tagTitle SEPARATOR ', ') AS tags \
   FROM tags t \
-  JOIN guess_tags gt ON t.tagID = gt.tagID \
-  JOIN motd_tags mt ON gt.tagID = mt.tagID \
-  ORDER BY gt.score DESC \
-  LIMIT 3;"
+  JOIN join_tables jt ON t.tagID = jt.tagID;"
 
   mysqlConnection.query(sql, [userID, userID, userID, userID, userID], (err, results, fields) => {
     if (err) {
