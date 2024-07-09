@@ -46,9 +46,9 @@ function movieDetails(userID) {
       FROM tagScores ts \
       JOIN guesses g ON ts.mlID = g.mlID \
       WHERE g.challengeDate = CURDATE() \
-      AND ts.score > 0 \
+      AND ts.score > 0.5 \
       AND g.userCookie = ? \
-      AND g.guessNumber = 1 \
+      AND g.guessNumber = (SELECT COUNT(gs.guessNumber) FROM guesses gs WHERE gs.challengeDate = CURDATE() AND userCookie = ?) \
   ), \
   motd_tags AS ( \
     SELECT ts.tagID \
@@ -56,6 +56,7 @@ function movieDetails(userID) {
     JOIN tmdbPopularMovies tp ON dm.selectID = tp.selectID \
     JOIN idLinks idl ON tp.tmdbID = idl.tmdbID \
     JOIN tagScores ts ON idl.mlID = ts.mlID \
+    WHERE ts.score > 0.5 \
   ) \
   SELECT t.tagTitle \
   FROM tags t \
@@ -64,7 +65,7 @@ function movieDetails(userID) {
   ORDER BY gt.score DESC \
   LIMIT 3;"
 
-  mysqlConnection.query(sql, [userID, userID, userID, userID], (err, results, fields) => {
+  mysqlConnection.query(sql, [userID, userID, userID, userID, userID], (err, results, fields) => {
     if (err) {
       console.error('Error executing query:', err);
       return;
