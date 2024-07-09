@@ -32,54 +32,18 @@ function App() {
         guessMLID: guessMLID
       })
     })
-    .then((response) => response.json())
+    .then((response) => {console.log(response); return response.json()})
     .then((data) => {
       if (data['result'] === 'FAILED') {
-        // popup showing that guess was not added due to error
+        alert('failed to insert - probably over ')
       } else {
-        // show if guess was correct or wrong
+        addGuessedRow(data);
       }
     });
   };
 
-  function addGuessedRow() {
-    setGuessRows([Row(
-      {
-        "isCorrect": true,
-        "guess": "5",
-        "title": "Jumanji",
-        "studio": {
-            "name": "20th Century Fox",
-            "isCorrect": true
-        },
-        "year": 2010,
-        "yearProximity": "correct",
-        "casts": [
-            {
-                "name": "First Actor Name",
-                "relativity": "same_movie"
-            },
-            {
-                "name": "Second Actor Name",
-                "relativity": "adjacent_movie"
-            },
-            {
-              "name": "Third Actor Name",
-              "relativity": "no"
-          }
-        ],
-        "genres": [
-            "Genre 1",
-            "Genre 2",
-            "Genre 3"
-        ],
-        "tags": [
-            "Tag 1",
-            "Tag 2",
-            "Tag 3"
-        ]
-    }
-    ), ...guessRows]);
+  function addGuessedRow(data: {isCorrect: boolean; guess: number; title: string; studio: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }) {
+    setGuessRows([Row(data), ...guessRows]);
   }
 
   return (
@@ -106,40 +70,6 @@ function App() {
           <div>Tags</div>
         </div>
         {guessRows}
-        <div className='row correct'>
-          <div>9</div>
-          <div>The Maze Runner</div>
-          <div>20th Century Fox</div>
-          <div>2014</div>
-          <div>
-            <p>Dylan O'Brien</p>
-            <p>Kaya Scodelario</p>
-            <p>Will Poulter</p>
-          </div>
-          <div>
-            <p>Action</p>
-            <p>Mystery</p>
-            <p>Sci-fi</p>
-          </div>
-          <div></div>
-        </div>
-        <div className='row'>
-          <div>8</div>
-          <div>The Lone Ranger</div>
-          <div className='correctElement'>20th Century Fox</div>
-          <div className='closeElement'>2013</div>
-          <div>
-            <p>Johnny Depp</p>
-            <p>Armie Hammer</p>
-          </div>
-          <div>
-            <p>Horror</p>
-          </div>
-          <div className='correctElement'>
-            <p>Aliens</p>
-            <p>War</p>
-          </div>
-        </div>
       </div>
     </div>
   );
