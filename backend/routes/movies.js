@@ -114,10 +114,88 @@ Router.post("/makeGuess", (req, res) => {
         }
         else {
           sql = "INSERT INTO guesses VALUES (CURDATE(), ?, (SELECT mgn FROM (SELECT COUNT(*)+1 mgn FROM guesses WHERE userCookie=? AND challengeDate=CURDATE()) t), ?)";
-          mysqlConnection.query(sql, [body.userID, body.userID, body.guessMLID],
-            async (err_, results_, fields_) => {
-              if (!err_) {
-                sql = "WITH guessed_movie AS ( \
+          mysqlConnection.query(sql, [body.userID, body.userID, body.guessMLID], (err_, results_, fields_) => {
+            if (!err_) {
+              sql = "WITH guessed_movie AS ( \
+              SELECT g.mlID \
+              FROM guesses g \
+              WHERE g.challengeDate = CURDATE() \
+                AND g.userCookie = ? \
+                AND g.guessNumber = ( \
+                  SELECT mgn \
+                  FROM (SELECT COUNT(*) AS mgn \
+                        FROM guesses \
+                        WHERE userCookie = ? \
+                          AND challengeDate = CURDATE()) AS subquery1 \
+                ) \
+              ), \
+              daily_movie_year AS ( \
+                SELECT ml.releaseYear \
+                FROM dailyMovies dm \
+                JOIN tmdbPopularMovies tm ON dm.selectID = tm.selectID \
+                JOIN idLinks idl ON tm.tmdbID = idl.tmdbID \
+                JOIN mlMoviesWithYears ml ON idl.mlID = ml.mlID \
+                WHERE dm.challengeDate = CURDATE() \
+              ) \
+              SELECT \
+                0 AS isCorrect, \
+                g.guessNumber AS guess, \
+                m.mlTitle AS title, \
+                '' AS studio, \
+                m.releaseYear AS year, \
+                CASE \
+                  WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) > m.releaseYear THEN 'low' \
+                  WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) = m.releaseYear THEN 'correct' \
+                  WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) < m.releaseYear THEN 'high' \
+                END AS yearProximity, \
+                GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts, \
+                GROUP_CONCAT(DISTINCT ge.genre ORDER BY ge.genre SEPARATOR ', ') AS genres \
+              FROM mlMoviesWithYears m \
+              JOIN guessed_movie gm ON m.mlID = gm.mlID \
+              JOIN guesses g ON m.mlID = g.mlID \
+              LEFT JOIN idLinks i ON m.mlID = i.mlID \
+              LEFT JOIN genres ge ON m.mlID = ge.mlID \
+              LEFT JOIN imdbActors a ON i.imdbID = a.imdbID \
+              WHERE g.challengeDate = CURDATE() \
+                AND g.userCookie = ? \
+                AND g.guessNumber = ( \
+                    SELECT mgn \
+                    FROM (SELECT COUNT(*) AS mgn \
+                          FROM guesses \
+                          WHERE userCookie = ? \
+                            AND challengeDate = CURDATE()) AS subquery1 \
+                  ) \
+              GROUP BY m.mlID, g.guessNumber, m.mlTitle, m.releaseYear; \
+              \
+              \
+              \
+              WITH guess_tags AS ( \
+                  SELECT ts.tagID, ts.score \
+                  FROM tagScores ts \
+                  JOIN guesses g ON ts.mlID = g.mlID \
+                  WHERE g.challengeDate = CURDATE() \
+                  AND ts.score > 0.5 \
+                  AND g.userCookie = ? \
+                  AND g.guessNumber = (SELECT COUNT(gs.guessNumber) FROM guesses gs WHERE gs.challengeDate = CURDATE() AND userCookie = ?) \
+              ), \
+              motd_tags AS ( \
+                SELECT ts.tagID \
+                FROM dailyMovies dm \
+                JOIN tmdbPopularMovies tp ON dm.selectID = tp.selectID \
+                JOIN idLinks idl ON tp.tmdbID = idl.tmdbID \
+                JOIN tagScores ts ON idl.mlID = ts.mlID \
+                WHERE ts.score > 0.5 \
+              ) \
+              SELECT t.tagTitle \
+              FROM tags t \
+              JOIN guess_tags gt ON t.tagID = gt.tagID \
+              JOIN motd_tags mt ON gt.tagID = mt.tagID \
+              ORDER BY gt.score DESC \
+              LIMIT 3; \
+              \
+              \
+              \
+              WITH guessed_movie AS ( \
                 SELECT g.mlID \
                 FROM guesses g \
                 WHERE g.challengeDate = CURDATE() \
@@ -129,142 +207,62 @@ Router.post("/makeGuess", (req, res) => {
                           WHERE userCookie = ? \
                             AND challengeDate = CURDATE()) AS subquery1 \
                   ) \
-                ), \
-                daily_movie_year AS ( \
-                  SELECT ml.releaseYear \
-                  FROM dailyMovies dm \
-                  JOIN tmdbPopularMovies tm ON dm.selectID = tm.selectID \
-                  JOIN idLinks idl ON tm.tmdbID = idl.tmdbID \
-                  JOIN mlMoviesWithYears ml ON idl.mlID = ml.mlID \
-                  WHERE dm.challengeDate = CURDATE() \
-                ) \
-                SELECT \
-                  0 AS isCorrect, \
-                  g.guessNumber AS guess, \
-                  m.mlTitle AS title, \
-                  '' AS studio, \
-                  m.releaseYear AS year, \
-                  CASE \
-                    WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) > m.releaseYear THEN 'low' \
-                    WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) = m.releaseYear THEN 'correct' \
-                    WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) < m.releaseYear THEN 'high' \
-                  END AS yearProximity, \
-                  GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts, \
-                  GROUP_CONCAT(DISTINCT ge.genre ORDER BY ge.genre SEPARATOR ', ') AS genres \
-                FROM mlMoviesWithYears m \
-                JOIN guessed_movie gm ON m.mlID = gm.mlID \
-                JOIN guesses g ON m.mlID = g.mlID \
-                LEFT JOIN idLinks i ON m.mlID = i.mlID \
-                LEFT JOIN genres ge ON m.mlID = ge.mlID \
-                LEFT JOIN imdbActors a ON i.imdbID = a.imdbID \
-                WHERE g.challengeDate = CURDATE() \
-                  AND g.userCookie = ? \
-                  AND g.guessNumber = ( \
-                      SELECT mgn \
-                      FROM (SELECT COUNT(*) AS mgn \
-                            FROM guesses \
-                            WHERE userCookie = ? \
-                              AND challengeDate = CURDATE()) AS subquery1 \
-                    ) \
-                GROUP BY m.mlID, g.guessNumber, m.mlTitle, m.releaseYear; \
-                \
-                \
-                \
-                WITH guess_tags AS ( \
-                    SELECT ts.tagID, ts.score \
-                    FROM tagScores ts \
-                    JOIN guesses g ON ts.mlID = g.mlID \
-                    WHERE g.challengeDate = CURDATE() \
-                    AND ts.score > 0.5 \
-                    AND g.userCookie = ? \
-                    AND g.guessNumber = (SELECT COUNT(gs.guessNumber) FROM guesses gs WHERE gs.challengeDate = CURDATE() AND userCookie = ?) \
-                ), \
-                motd_tags AS ( \
-                  SELECT ts.tagID \
-                  FROM dailyMovies dm \
-                  JOIN tmdbPopularMovies tp ON dm.selectID = tp.selectID \
-                  JOIN idLinks idl ON tp.tmdbID = idl.tmdbID \
-                  JOIN tagScores ts ON idl.mlID = ts.mlID \
-                  WHERE ts.score > 0.5 \
-                ) \
-                SELECT t.tagTitle \
-                FROM tags t \
-                JOIN guess_tags gt ON t.tagID = gt.tagID \
-                JOIN motd_tags mt ON gt.tagID = mt.tagID \
-                ORDER BY gt.score DESC \
-                LIMIT 3; \
-                \
-                \
-                \
-                WITH guessed_movie AS ( \
-                  SELECT g.mlID \
-                  FROM guesses g \
-                  WHERE g.challengeDate = CURDATE() \
-                    AND g.userCookie = ? \
-                    AND g.guessNumber = ( \
-                      SELECT mgn \
-                      FROM (SELECT COUNT(*) AS mgn \
-                            FROM guesses \
-                            WHERE userCookie = ? \
-                              AND challengeDate = CURDATE()) AS subquery1 \
-                    ) \
-                  ),\
-                  movie_of_the_day AS (\
-                    SELECT i.mlID\
-                    FROM dailyMovies d\
-                    JOIN tmdbPopularMovies t ON d.selectID = t.selectID\
-                    JOIN idLinks i ON t.tmdbID = i.tmdbID\
-                    WHERE d.challengeDate = CURDATE()\
                 ),\
-                today_actors AS (\
-                  SELECT a.actorID, a.actorName\
-                  FROM imdbActors a\
-                  JOIN idLinks il ON a.imdbID = il.imdbID\
-                  WHERE il.mlID = (SELECT mlID FROM movie_of_the_day)\
-                ),\
-                guessed_movie_actors AS (\
-                  SELECT a.actorID, a.actorName\
-                  FROM imdbActors a\
-                  JOIN idLinks il ON a.imdbID = il.imdbID\
-                  WHERE il.mlID = (SELECT mlID FROM guessed_movie)\
-                ),\
-                all_today_actor_movies AS (\
-                SELECT DISTINCT il.imdbID \
-                FROM imdbActors ia \
-                JOIN idLinks il ON ia.imdbID = il.imdbID\
-                WHERE ia.actorID IN (SELECT actorID FROM today_actors)\
-                ),\
-                actors_acted_with_today_movie_actors AS (\
-                SELECT DISTINCT ia.actorID \
-                FROM imdbActors ia \
-                WHERE ia.imdbID IN (SELECT imdbID FROM all_today_actor_movies)\
-                )\
-                SELECT ga.actorName, \
-                ga.actorID, \
-                CASE \
-                  WHEN ga.actorID IN (SELECT actorID FROM today_actors) THEN 'same'\
-                  WHEN ga.actorID IN (SELECT actorID FROM actors_acted_with_today_movie_actors) THEN 'adjacent'\
-                  WHEN ga.actorID NOT IN (SELECT actorID FROM today_actors) AND ga.actorID NOT IN (SELECT actorID FROM actors_acted_with_today_movie_actors) THEN 'no'\
-                END AS proximity \
-                FROM guessed_movie_actors ga;"
-                
-                mysqlConnection.query(sql, [body.userID, body.userID, body.userID, body.userID, body.userID, body.userID, body.userID, body.userID], (err__, results__, fields__) => {
-                  if (err__) {
-                    console.error('Error executing query:', err__);
-                    return;
-                  }
-                  console.log(results__);
-                  let response = results__[0][0];
-                  response['tags'] = results__[1].map(e => e.tagTitle);
-                  response['casts'] = results__[2];
-                  response['genres'] = response['genres'].split(', ');
-                  res.send(response);
-                });
-              } else {
-                console.log(err_);
-              }
+                movie_of_the_day AS (\
+                  SELECT i.mlID\
+                  FROM dailyMovies d\
+                  JOIN tmdbPopularMovies t ON d.selectID = t.selectID\
+                  JOIN idLinks i ON t.tmdbID = i.tmdbID\
+                  WHERE d.challengeDate = CURDATE()\
+              ),\
+              today_actors AS (\
+                SELECT a.actorID, a.actorName\
+                FROM imdbActors a\
+                JOIN idLinks il ON a.imdbID = il.imdbID\
+                WHERE il.mlID = (SELECT mlID FROM movie_of_the_day)\
+              ),\
+              guessed_movie_actors AS (\
+                SELECT a.actorID, a.actorName\
+                FROM imdbActors a\
+                JOIN idLinks il ON a.imdbID = il.imdbID\
+                WHERE il.mlID = (SELECT mlID FROM guessed_movie)\
+              ),\
+              all_today_actor_movies AS (\
+              SELECT DISTINCT il.imdbID \
+              FROM imdbActors ia \
+              JOIN idLinks il ON ia.imdbID = il.imdbID\
+              WHERE ia.actorID IN (SELECT actorID FROM today_actors)\
+              ),\
+              actors_acted_with_today_movie_actors AS (\
+              SELECT DISTINCT ia.actorID \
+              FROM imdbActors ia \
+              WHERE ia.imdbID IN (SELECT imdbID FROM all_today_actor_movies)\
+              )\
+              SELECT ga.actorName, \
+              ga.actorID, \
+              CASE \
+                WHEN ga.actorID IN (SELECT actorID FROM today_actors) THEN 'same'\
+                WHEN ga.actorID IN (SELECT actorID FROM actors_acted_with_today_movie_actors) THEN 'adjacent'\
+                WHEN ga.actorID NOT IN (SELECT actorID FROM today_actors) AND ga.actorID NOT IN (SELECT actorID FROM actors_acted_with_today_movie_actors) THEN 'no'\
+              END AS proximity \
+              FROM guessed_movie_actors ga;"
+              
+              mysqlConnection.query(sql, [body.userID, body.userID, body.userID, body.userID, body.userID, body.userID, body.userID, body.userID], (err__, results__, fields__) => {
+                if (err__) {
+                  console.error('Error executing query:', err__);
+                  return;
+                }
+                console.log(results__);
+                let response = results__[0][0];
+                response['tags'] = results__[1].map(e => e.tagTitle);
+                response['casts'] = results__[2];
+                response['genres'] = response['genres'].split(', ');
+                res.send(response);
+              });
+            } else {
+              console.log(err_);
             }
-          );
+          });
         }
       } else {
         console.log(err);
