@@ -35,7 +35,7 @@ To run the sql server: sudo /usr/local/mysql/bin/mysql -u root -p
 
 
 ## How to create database schema
-
+sudo /usr/local/mysql/bin/mysql -u root -p --local-infile=1
 `SELECT @@secure_file_priv;`
 
 ```sql
