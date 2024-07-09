@@ -14,6 +14,7 @@ function App() {
   const [movieGuessFormat, setMovieGuessFormat] = useState([]);
   const [guessMLID, setGuessMLID] = useState(-1);
   const [guessRows, setGuessRows] = useState<React.ReactElement[]>([]);
+  const [isSearchContainerHidden, setIsSearchContainerHidden] = useState(false);
 
   useEffect(() => {
      fetch('http://localhost:4000/getFormat')
@@ -22,14 +23,7 @@ function App() {
         .catch((err) => {console.log(err)});
   }, []);
 
-<<<<<<< HEAD
-  const [guessMLID, setGuessMLID] = useState(-1);
-  const [isSearchContainerHidden, setIsSearchContainerHidden] = useState(false);
-
-  const searchClick = () => {
-=======
   const makeGuess = () => {
->>>>>>> 91b75881f46133af49fb1caac051c725583b2729
     fetch('http://localhost:4000/makeGuess', {method: 'post', headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
@@ -49,7 +43,6 @@ function App() {
     });
   };
 
-<<<<<<< HEAD
   const revealMovie = () => {
     fetch('http://localhost:4000/revealMOTD', {
       method: 'get',
@@ -80,7 +73,6 @@ function App() {
 
   };
 
-=======
   function addGuessedRow() {
     setGuessRows([Row(
       {
@@ -121,7 +113,6 @@ function App() {
     ), ...guessRows]);
   }
 
->>>>>>> 91b75881f46133af49fb1caac051c725583b2729
   return (
     <div className="App">
       <header className="App-header">

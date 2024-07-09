@@ -7,6 +7,8 @@ const MAX_MOVIES_TO_CHOOSE_FROM = 1000;
 const MAX_GUESSES = 10;
 const MAX_SEARCH_RETURN = 10;
 
+
+
 function movieDetails(userID) {
   sql = "WITH guessed_movie AS ( \
   SELECT g.mlID \
@@ -209,7 +211,6 @@ Router.get("/revealMOTD", (req, res) => {
 );
 
 Router.get("/giveUp", (req, res) => {
-  console.log("hello");
   let body = req.body;
   let sql = "CALL giveUpFill(CURDATE(), ?);";
   mysqlConnection.query(sql, [body.userID],
