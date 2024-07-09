@@ -21,6 +21,7 @@ function movieDetails(userID) {
                 AND challengeDate = CURDATE()) AS subquery1 \
       ) \
     ) \
+<<<<<<< HEAD
     SELECT \
       0 AS isCorrect, \
       g.guessNumber AS guess, \
@@ -119,6 +120,69 @@ actors_acted_with_today_movie_actors AS (\
 END AS proximity \
 FROM guessed_movie_actors ga;"
 
+=======
+  ), \
+  daily_movie_year AS ( \
+    SELECT ml.releaseYear \
+    FROM dailyMovies dm \
+    JOIN tmdbPopularMovies tm ON dm.selectID = tm.selectID \
+    JOIN idLinks idl ON tm.tmdbID = idl.tmdbID \
+    JOIN mlMoviesWithYears ml ON idl.mlID = ml.mlID \
+    WHERE dm.challengeDate = CURDATE() \
+  ) \
+  SELECT \
+    0 AS isCorrect, \
+    g.guessNumber AS guess, \
+    m.mlTitle AS title, \
+    '' AS studio, \
+    m.releaseYear AS year, \
+    CASE \
+      WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) > m.releaseYear THEN 'low' \
+      WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) = m.releaseYear THEN 'correct' \
+      WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) < m.releaseYear THEN 'high' \
+    END AS yearProximity, \
+    GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts, \
+    GROUP_CONCAT(DISTINCT ge.genre ORDER BY ge.genre SEPARATOR ', ') AS genres \
+  FROM mlMoviesWithYears m \
+  JOIN guessed_movie gm ON m.mlID = gm.mlID \
+  JOIN guesses g ON m.mlID = g.mlID \
+  LEFT JOIN idLinks i ON m.mlID = i.mlID \
+  LEFT JOIN genres ge ON m.mlID = ge.mlID \
+  LEFT JOIN imdbActors a ON i.imdbID = a.imdbID \
+  WHERE g.challengeDate = CURDATE() \
+    AND g.userCookie = ? \
+  GROUP BY m.mlID, g.guessNumber, m.mlTitle, m.releaseYear; \
+  \
+  \
+  \
+  WITH guess_tags AS ( \
+      SELECT ts.tagID, ts.score \
+      FROM tagScores ts \
+      JOIN guesses g ON ts.mlID = g.mlID \
+      WHERE g.challengeDate = CURDATE() \
+      AND ts.score > 0.5 \
+      AND g.userCookie = ? \
+      AND g.guessNumber = (SELECT COUNT(gs.guessNumber) FROM guesses gs WHERE gs.challengeDate = CURDATE() AND userCookie = ?) \
+  ), \
+  motd_tags AS ( \
+    SELECT ts.tagID \
+    FROM dailyMovies dm \
+    JOIN tmdbPopularMovies tp ON dm.selectID = tp.selectID \
+    JOIN idLinks idl ON tp.tmdbID = idl.tmdbID \
+    JOIN tagScores ts ON idl.mlID = ts.mlID \
+    WHERE ts.score > 0.5 \
+  ), \
+  join_tables AS ( \
+    SELECT gt.tagID, gt.score \
+    FROM guess_tags gt \
+    JOIN motd_tags mt ON gt.tagID = mt.tagID \
+    ORDER BY gt.score DESC \
+    LIMIT 3 \
+  ) \
+  SELECT GROUP_CONCAT(DISTINCT t.tagTitle ORDER BY t.tagTitle SEPARATOR ', ') AS tags \
+  FROM tags t \
+  JOIN join_tables jt ON t.tagID = jt.tagID;"
+>>>>>>> ccd7304253584d8328814484f471d799cf5e0494
 
   mysqlConnection.query(sql, [userID, userID, userID, userID, userID, userID, userID], (err, results, fields) => {
     if (err) {
