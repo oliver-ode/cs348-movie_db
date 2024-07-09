@@ -1,22 +1,32 @@
-SET @user_guess = 'Jumanji'; -- Replace with actual user input
+SET @user_cookie = '49faa1b8-f8d4-4a4f-a68d-315b3de29df6';
 
--- Step 1: Retrieve the mlID for the guessed movie using selectID
 WITH guessed_movie AS (
-    SELECT m.mlID
-    FROM mlMoviesWithYears m
-    WHERE m.mlTitle = @user_guess
+    SELECT g.mlID
+    FROM guesses g
+    WHERE g.challengeDate = CURDATE()
+    AND g.userCookie = @user_cookie
+    AND g.guessNumber = (
+        SELECT mgn
+        FROM (SELECT COUNT(*) AS mgn
+            FROM guesses
+            WHERE userCookie = @user_cookie
+                AND challengeDate = CURDATE()) AS subquery1
+    )
 )
--- Step 2: Retrieve the basic information about the guessed movie
-SELECT         
-    m.mlTitle AS title,
-    m.releaseYear AS release_year,
-    GROUP_CONCAT(DISTINCT g.genre ORDER BY g.genre SEPARATOR ', ') AS genres,
-    GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ',') AS actors
-
+SELECT
+  0 AS isCorrect,
+  g.guessNumber AS guess,
+  m.mlTitle AS title,
+  '' AS studio,
+  m.releaseYear AS year,
+  GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts,
+  GROUP_CONCAT(DISTINCT ge.genre ORDER BY ge.genre SEPARATOR ', ') AS genres
 FROM mlMoviesWithYears m
+JOIN guessed_movie gm ON m.mlID = gm.mlID
+JOIN guesses g ON m.mlID = g.mlID
 LEFT JOIN idLinks i ON m.mlID = i.mlID
-LEFT JOIN genre g ON m.mlID = g.mlID
+LEFT JOIN genres ge ON m.mlID = ge.mlID
 LEFT JOIN imdbActors a ON i.imdbID = a.imdbID
-
-WHERE m.mlID = (SELECT mlID FROM guesses)
-GROUP BY m.mlID, m.mlTitle, m.releaseYear;
+WHERE g.challengeDate = CURDATE()
+  AND g.userCookie = @user_cookie
+GROUP BY m.mlID, g.guessNumber, m.mlTitle, m.releaseYear;
