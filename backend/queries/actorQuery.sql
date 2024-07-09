@@ -1,6 +1,10 @@
+<<<<<<< HEAD
+SET @guessed_select_id = 123; -- Replace with actual selectID of the guessed movie
+=======
 -- Set the variables for the challenge date and guessed movie title
-SET @challenge_date = '2024-06-19'; -- Adjust date as necessary
-SET @guessed_movie_title = 'Driving Miss Daisy'; -- Replace with actual user input
+SET @challenge_date = '2024-07-09'; -- Adjust date as necessary
+SET @guessed_movie_title = 'The Place Beyond the Pines'; -- Replace with actual user input
+>>>>>>> ccd7304253584d8328814484f471d799cf5e0494
 
 -- Step 1: Retrieve the mlID of today's movie using selectID
 WITH movie_of_the_day AS (
@@ -8,7 +12,7 @@ WITH movie_of_the_day AS (
     FROM dailyMovies d
     JOIN tmdbPopularMovies t ON d.selectID = t.selectID
     JOIN idLinks i ON t.tmdbID = i.tmdbID
-    WHERE d.challengeDate = @challenge_date
+    WHERE d.challengeDate = CURDATE()
 ),
 
 -- Step 2: Retrieve the actors from today's movie
@@ -22,9 +26,9 @@ today_actors AS (
 -- Step 3: Retrieve the mlID of the guessed movie
 guessed_movie AS (
     SELECT i.mlID
-    FROM mlMoviesWithYears m
-    JOIN idLinks i ON m.mlID = i.mlID
-    WHERE m.mlTitle = @guessed_movie_title
+    FROM tmdbPopularMovies t
+    JOIN idLinks i ON t.tmdbID = i.tmdbID
+    WHERE t.selectID = 1
 ),
 
 -- Step 4: Retrieve the actors from the guessed movie
@@ -50,7 +54,13 @@ actors_acted_with_today_movie_actors AS (
     WHERE ia.imdbID IN (SELECT imdbID FROM all_today_actor_movies)
 )
 
--- Step 7: Return guessed movie actors who have been in movies that today's movie actors have been in
-SELECT DISTINCT ga.actorName as GuessedMovieActor
-FROM guessed_movie_actors ga 
-WHERE ga.actorID IN (SELECT actorID FROM actors_acted_with_today_movie_actors);
+-- Step 7: Return guessed movie actors with their proximity
+SELECT 
+    ga.actorName AS GuessedMovieActor, 
+    ga.actorID,
+    CASE 
+        WHEN ga.actorID IN (SELECT actorID FROM today_actors) THEN 'same'
+        WHEN ga.actorID IN (SELECT actorID FROM actors_acted_with_today_movie_actors) THEN 'adjacent'
+        ELSE 'no'
+    END AS proximity
+FROM guessed_movie_actors ga;

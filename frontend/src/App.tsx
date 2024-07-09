@@ -4,6 +4,7 @@ import Cookies from 'universal-cookie';
 import { v4 as uuidv4 } from 'uuid';
 import SearchBar from './SearchComp';
 import logo from './assets/FlickFindLogo.png';
+import Row from './Row'
 
 function App() {
   const cookies = new Cookies(null, { path: '/' });
@@ -11,6 +12,9 @@ function App() {
     cookies.set('userID', uuidv4(), {expires: new Date(new Date().setFullYear(new Date().getFullYear() + 50))});
 
   const [movieGuessFormat, setMovieGuessFormat] = useState([]);
+  const [guessMLID, setGuessMLID] = useState(-1);
+  const [guessRows, setGuessRows] = useState<React.ReactElement[]>([]);
+
   useEffect(() => {
      fetch('http://localhost:4000/getFormat')
         .then((response) => response.json())
@@ -18,10 +22,14 @@ function App() {
         .catch((err) => {console.log(err)});
   }, []);
 
+<<<<<<< HEAD
   const [guessMLID, setGuessMLID] = useState(-1);
   const [isSearchContainerHidden, setIsSearchContainerHidden] = useState(false);
 
   const searchClick = () => {
+=======
+  const makeGuess = () => {
+>>>>>>> 91b75881f46133af49fb1caac051c725583b2729
     fetch('http://localhost:4000/makeGuess', {method: 'post', headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
@@ -41,6 +49,7 @@ function App() {
     });
   };
 
+<<<<<<< HEAD
   const revealMovie = () => {
     fetch('http://localhost:4000/revealMOTD', {
       method: 'get',
@@ -71,6 +80,48 @@ function App() {
 
   };
 
+=======
+  function addGuessedRow() {
+    setGuessRows([Row(
+      {
+        "isCorrect": true,
+        "guess": "5",
+        "title": "Jumanji",
+        "studio": {
+            "name": "20th Century Fox",
+            "isCorrect": true
+        },
+        "year": 2010,
+        "yearProximity": "correct",
+        "casts": [
+            {
+                "name": "First Actor Name",
+                "relativity": "same_movie"
+            },
+            {
+                "name": "Second Actor Name",
+                "relativity": "adjacent_movie"
+            },
+            {
+              "name": "Third Actor Name",
+              "relativity": "no"
+          }
+        ],
+        "genres": [
+            "Genre 1",
+            "Genre 2",
+            "Genre 3"
+        ],
+        "tags": [
+            "Tag 1",
+            "Tag 2",
+            "Tag 3"
+        ]
+    }
+    ), ...guessRows]);
+  }
+
+>>>>>>> 91b75881f46133af49fb1caac051c725583b2729
   return (
     <div className="App">
       <header className="App-header">
@@ -80,7 +131,7 @@ function App() {
       <div className="search-container" style={{ display: isSearchContainerHidden ? 'none' : 'block' }}>
         <div className="search-input-wrapper">
           <SearchBar setGuessMLID={setGuessMLID}/>
-          <span className="search-icon" onClick={searchClick}>&#128269;</span>
+          <span className="search-icon" onClick={makeGuess}>&#128269;</span>
         </div>
         <button className="give-up-button" onClick={giveUpClick}>Give up</button>
       </div>
@@ -94,6 +145,7 @@ function App() {
           <div>Genre</div>
           <div>Tags</div>
         </div>
+        {guessRows}
         <div className='row correct'>
           <div>9</div>
           <div>The Maze Runner</div>
