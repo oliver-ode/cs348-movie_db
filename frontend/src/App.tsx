@@ -2,13 +2,10 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import Cookies from 'universal-cookie';
 import { v4 as uuidv4 } from 'uuid';
-import Example from './SearchComp';
+import SearchBar from './SearchComp';
 import logo from './assets/FlickFindLogo.png';
 
 function App() {
-  const upArrow = '↑';
-  const downArrow = '↓';
-
   const cookies = new Cookies(null, { path: '/' });
   if (!cookies.get('userID'))
     cookies.set('userID', uuidv4(), {expires: new Date(new Date().setFullYear(new Date().getFullYear() + 50))});
@@ -51,7 +48,7 @@ function App() {
       <p style={{whiteSpace: 'pre'}}>{movieGuessFormat}</p>
       <div className="search-container">
         <div className="search-input-wrapper">
-          <Example setGuessMLID={setGuessMLID}/>
+          <SearchBar setGuessMLID={setGuessMLID}/>
           <span className="search-icon" onClick={searchClick}>&#128269;</span>
         </div>
         <button className="give-up-button">Give up</button>
@@ -87,7 +84,7 @@ function App() {
           <div>8</div>
           <div>The Lone Ranger</div>
           <div className='correctElement'>20th Century Fox</div>
-          <div className='closeElement'>{upArrow} 2013</div>
+          <div className='closeElement'>2013</div>
           <div>
             <p>Johnny Depp</p>
             <p>Armie Hammer</p>

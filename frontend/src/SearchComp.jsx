@@ -25,7 +25,7 @@ const renderSuggestion = suggestion => (
   </div>
 );
 
-export default class Example extends React.Component {
+export default class SearchBar extends React.Component {
   constructor(props) {
     super();
 
