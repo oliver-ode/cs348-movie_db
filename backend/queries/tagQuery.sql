@@ -40,8 +40,8 @@ join_tags AS (
 )
 
 -- Step 3: Get the top three tags for the movie of the day
-SELECT t.tagTitle, jt.score
-FROM tagMeaning t
+SELECT t.tagTitle
+FROM tags t
 JOIN join_tags jt ON t.tagID = jt.tagID
 ORDER BY jt.score DESC
 LIMIT 3;

@@ -18,5 +18,5 @@ LEFT JOIN idLinks i ON m.mlID = i.mlID
 LEFT JOIN genre g ON m.mlID = g.mlID
 LEFT JOIN imdbActors a ON i.imdbID = a.imdbID
 
-WHERE m.mlID = (SELECT mlID FROM guessed_movie)
+WHERE m.mlID = (SELECT mlID FROM guesses)
 GROUP BY m.mlID, m.mlTitle, m.releaseYear;

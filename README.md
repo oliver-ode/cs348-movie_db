@@ -39,5 +39,5 @@ To run the sql server: sudo /usr/local/mysql/bin/mysql -u root -p
 `SELECT @@secure_file_priv;`
 
 ```sql
-SOURCE createdb.sql
+SOURCE createdb.sql;
 ```

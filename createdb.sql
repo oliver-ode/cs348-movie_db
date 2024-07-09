@@ -79,6 +79,9 @@ CREATE TABLE guesses (
     FOREIGN KEY (mlID) REFERENCES idLinks (mlID)
 );
 
+-- Set local infile to true
+SET GLOBAL local_infile=1;
+
 -- Load data from CSV files
 LOAD DATA LOCAL INFILE 'backend/tables/idLinks.csv'
 INTO TABLE idLinks

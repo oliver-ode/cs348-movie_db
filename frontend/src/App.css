@@ -48,7 +48,6 @@
   color: #ece314;
 }
 
-
 .react-autosuggest__container {
   position: relative;
 }
@@ -106,3 +105,44 @@
 .react-autosuggest__suggestion--highlighted {
   background-color: #ddd;
 }
+
+/* New styles for search bar and button */
+.search-container {
+  display: flex;
+  align-items: center;
+  margin: 20px;
+}
+
+.search-container input[type="text"] {
+  width: 400px; /* Adjust width as necessary */
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 50px; /* Makes the input rounded */
+  font-size: 16px;
+  margin-right: 10px;
+}
+
+.search-container input[type="text"]::placeholder {
+  font-size: 16px;
+  color: #aaa;
+}
+
+.give-up-button {
+  padding: 10px 20px;
+  background-color: #d9534f; /* Red color */
+  border: none;
+  border-radius: 20px; /* Makes the button rounded */
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.give-up-button:hover {
+  background-color: #c9302c; /* Darker red on hover */
+}
+.search-input-wrapper .search-icon {
+  position: absolute;
+  left: 697px;
+  top: 458px;
+
+}  

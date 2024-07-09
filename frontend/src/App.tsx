@@ -2,13 +2,10 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import Cookies from 'universal-cookie';
 import { v4 as uuidv4 } from 'uuid';
-import Example from './SearchComp'
+import SearchBar from './SearchComp';
+import logo from './assets/FlickFindLogo.png';
 
 function App() {
-  const upArrow = '↑';
-  const downArrow = '↓';
-
-
   const cookies = new Cookies(null, { path: '/' });
   if (!cookies.get('userID'))
     cookies.set('userID', uuidv4(), {expires: new Date(new Date().setFullYear(new Date().getFullYear() + 50))});
@@ -22,10 +19,11 @@ function App() {
   }, []);
 
   const [guessMLID, setGuessMLID] = useState(-1);
+
   const searchClick = () => {
     fetch('http://localhost:4000/makeGuess', {method: 'post', headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         userID: cookies.get('userID'),
@@ -34,22 +32,26 @@ function App() {
     })
     .then((response) => response.json())
     .then((data) => {
-      if (data['result'] == 'FAILED') {
-        // do something? popup?
+      if (data['result'] === 'FAILED') {
+        // popup showing that guess was not added due to error
+      } else {
+        // show if guess was correct or wrong
       }
-      else {
-        // if correct show if not show
-      }
-    })
+    });
   };
 
   return (
     <div className="App">
+      <header className="App-header">
+        <img src={logo} className="App-logo" alt="Flick Find Logo" />
+      </header>
       <p style={{whiteSpace: 'pre'}}>{movieGuessFormat}</p>
-      <div>
-        <Example setGuessMLID={setGuessMLID}/>
-        <button onClick={searchClick}>Search</button>
-        <button>Give up</button>
+      <div className="search-container">
+        <div className="search-input-wrapper">
+          <SearchBar setGuessMLID={setGuessMLID}/>
+          <span className="search-icon" onClick={searchClick}>&#128269;</span>
+        </div>
+        <button className="give-up-button">Give up</button>
       </div>
       <div className='table'>
         <div className='row'>
@@ -82,7 +84,7 @@ function App() {
           <div>8</div>
           <div>The Lone Ranger</div>
           <div className='correctElement'>20th Century Fox</div>
-          <div className='closeElement'>{upArrow} 2013</div>
+          <div className='closeElement'>2013</div>
           <div>
             <p>Johnny Depp</p>
             <p>Armie Hammer</p>
