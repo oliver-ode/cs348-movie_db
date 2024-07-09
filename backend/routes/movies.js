@@ -129,6 +129,14 @@ Router.post("/makeGuess", (req, res) => {
                           WHERE userCookie = ? \
                             AND challengeDate = CURDATE()) AS subquery1 \
                   ) \
+                ), \
+                daily_movie_year AS ( \
+                  SELECT ml.releaseYear \
+                  FROM dailyMovies dm \
+                  JOIN tmdbPopularMovies tm ON dm.selectID = tm.selectID \
+                  JOIN idLinks idl ON tm.tmdbID = idl.tmdbID \
+                  JOIN mlMoviesWithYears ml ON idl.mlID = ml.mlID \
+                  WHERE dm.challengeDate = CURDATE() \
                 ) \
                 SELECT \
                   0 AS isCorrect, \
@@ -136,6 +144,11 @@ Router.post("/makeGuess", (req, res) => {
                   m.mlTitle AS title, \
                   '' AS studio, \
                   m.releaseYear AS year, \
+                  CASE \
+                    WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) > m.releaseYear THEN 'low' \
+                    WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) = m.releaseYear THEN 'correct' \
+                    WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) < m.releaseYear THEN 'high' \
+                  END AS yearProximity, \
                   GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts, \
                   GROUP_CONCAT(DISTINCT ge.genre ORDER BY ge.genre SEPARATOR ', ') AS genres \
                 FROM mlMoviesWithYears m \
@@ -240,6 +253,7 @@ Router.post("/makeGuess", (req, res) => {
                     console.error('Error executing query:', err__);
                     return;
                   }
+                  console.log(results__);
                   let response = results__[0][0];
                   response['tags'] = results__[1].map(e => e.tagTitle);
                   response['casts'] = results__[2];
