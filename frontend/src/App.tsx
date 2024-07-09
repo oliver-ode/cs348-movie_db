@@ -4,6 +4,7 @@ import Cookies from 'universal-cookie';
 import { v4 as uuidv4 } from 'uuid';
 import SearchBar from './SearchComp';
 import logo from './assets/FlickFindLogo.png';
+import Row from './Row'
 
 function App() {
   const cookies = new Cookies(null, { path: '/' });
@@ -40,6 +41,47 @@ function App() {
     });
   };
 
+  const [guessRows, setGuessRows] = useState<React.ReactElement[]>([]);
+  
+
+  function aaaa() {
+    setGuessRows([Row(
+      {
+        "isCorrect": true,
+        "guess": "5",
+        "title": "Jumanji",
+        "studio": {
+            "name": "20th Century Fox",
+            "isCorrect": true
+        },
+        "year": {
+            "number": 2010,
+            "yearProximity": "low"
+        },
+        "casts": [
+            {
+                "name": "First Actor Name",
+                "relativity": "same_movie"
+            },
+            {
+                "name": "Second Actor Name",
+                "relativity": "adjacent_movie"
+            }
+        ],
+        "genres": [
+            "Genre 1",
+            "Genre 2",
+            "Genre 3"
+        ],
+        "tags": [
+            "Tag 1",
+            "Tag 2",
+            "Tag 3"
+        ]
+    }
+    ), ...guessRows]);
+  }
+
   return (
     <div className="App">
       <header className="App-header">
@@ -51,7 +93,7 @@ function App() {
           <SearchBar setGuessMLID={setGuessMLID}/>
           <span className="search-icon" onClick={searchClick}>&#128269;</span>
         </div>
-        <button className="give-up-button">Give up</button>
+        <button className="give-up-button" onClick={aaaa}>Give up</button>
       </div>
       <div className='table'>
         <div className='row'>
@@ -63,6 +105,7 @@ function App() {
           <div>Genre</div>
           <div>Tags</div>
         </div>
+        {guessRows}
         <div className='row correct'>
           <div>9</div>
           <div>The Maze Runner</div>
