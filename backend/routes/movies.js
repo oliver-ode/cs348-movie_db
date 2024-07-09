@@ -8,89 +8,69 @@ const MAX_GUESSES = 10;
 const MAX_SEARCH_RETURN = 10;
 
 function movieDetails(userID) {
-  sql = "-- Step 1: Retrieve the mlID for the guessed movie using selectID \
-  WITH guessed_movie AS ( \
-      SELECT g.mlID \
-      FROM guesses g \
-      WHERE g.challengeDate = CURDATE() \
-        AND g.userCookie = ? \
-        AND g.guessNumber = ( \
-          SELECT mgn  \
-          FROM (SELECT COUNT(*) AS mgn  \
-                FROM guesses  \
-                WHERE userCookie = ?  \
-                  AND challengeDate = CURDATE()) AS subquery1 \
-      ) \
-  ), \
-  -- Step 2: Retrieve the tagIDs and tagScores of the guessed movie \
-  guess_tags AS ( \
-      SELECT ts.tagID, ts.score \
-      FROM tagScores ts \
-      JOIN guesses g ON ts.mlID = g.mlID \
-      WHERE g.challengeDate = CURDATE()  \
-        AND g.userCookie = ?  \
-        AND g.guessNumber = ( \
-          SELECT COUNT(*)  \
-          FROM guesses  \
-          WHERE userCookie = ?  \
-            AND challengeDate = CURDATE() \
-      ) \
-        AND ts.score > 0.7 \
-  ), \
-  -- Step 3: Retrieve the tagIDs and tagScores of the movie of the day using selectID \
-  motd_tags AS ( \
-      SELECT ts.tagID, ts.score \
-      FROM tagScores ts \
-      JOIN dailyMovies dm ON dm.selectID = ( \
-          SELECT t.selectID  \
-          FROM dailyMovies d \
-          JOIN tmdbPopularMovies t ON d.selectID = t.selectID \
-          WHERE d.challengeDate = CURDATE() \
-      ) \
-      JOIN idLinks il ON il.tmdbID = ( \
-          SELECT t.tmdbID  \
-          FROM tmdbPopularMovies t \
-          WHERE t.selectID = dm.selectID \
-      ) \
-      WHERE ts.mlID = il.mlID  \
-        AND ts.score > 0.7 \
-  ), \
-  join_tags AS ( \
-      SELECT gt.tagID, mt.score \
-      FROM guess_tags gt \
-      JOIN motd_tags mt ON gt.tagID = mt.tagID \
-  ), \
-  tagChoose AS ( \
-      SELECT t.tagTitle \
-      FROM tags t \
-      JOIN join_tags jt ON t.tagID = jt.tagID \
-      ORDER BY jt.score DESC \
-      LIMIT 3 \
+  sql = "WITH guessed_movie AS ( \
+  SELECT g.mlID \
+  FROM guesses g \
+  WHERE g.challengeDate = CURDATE() \
+    AND g.userCookie = ? \
+    AND g.guessNumber = ( \
+      SELECT mgn \
+      FROM (SELECT COUNT(*) AS mgn \
+            FROM guesses \
+            WHERE userCookie = ? \
+              AND challengeDate = CURDATE()) AS subquery1 \
+    ) \
   ) \
-  -- Step 4: Retrieve the basic information about the guessed movie \
   SELECT \
-      0 AS isCorrect, \
-      g.guessNumber AS guess, \
-      m.mlTitle AS title, \
-      '' AS studio, \
-      m.releaseYear AS year, \
-      GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts, \
-      GROUP_CONCAT(DISTINCT ge.genre ORDER BY ge.genre SEPARATOR ', ') AS genres, \
-      GROUP_CONCAT(DISTINCT tc.tagTitle ORDER BY tc.tagTitle SEPARATOR ', ') AS tags \
+    0 AS isCorrect, \
+    g.guessNumber AS guess, \
+    m.mlTitle AS title, \
+    '' AS studio, \
+    m.releaseYear AS year, \
+    GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts, \
+    GROUP_CONCAT(DISTINCT ge.genre ORDER BY ge.genre SEPARATOR ', ') AS genres \
   FROM mlMoviesWithYears m \
   JOIN guessed_movie gm ON m.mlID = gm.mlID \
   JOIN guesses g ON m.mlID = g.mlID \
   LEFT JOIN idLinks i ON m.mlID = i.mlID \
   LEFT JOIN genres ge ON m.mlID = ge.mlID \
   LEFT JOIN imdbActors a ON i.imdbID = a.imdbID \
-  JOIN tagChoose tc \
   WHERE g.challengeDate = CURDATE() \
     AND g.userCookie = ? \
-  GROUP BY m.mlID, g.guessNumber, m.mlTitle, m.releaseYear;";
+  GROUP BY m.mlID, g.guessNumber, m.mlTitle, m.releaseYear; \
+  \
+  \
+  \
+  WITH guess_tags AS ( \
+      SELECT ts.tagID, ts.score \
+      FROM tagScores ts \
+      JOIN guesses g ON ts.mlID = g.mlID \
+      WHERE g.challengeDate = CURDATE() \
+      AND ts.score > 0 \
+      AND g.userCookie = ? \
+      AND g.guessNumber = 1 \
+  ), \
+  motd_tags AS ( \
+    SELECT ts.tagID \
+    FROM dailyMovies dm \
+    JOIN tmdbPopularMovies tp ON dm.selectID = tp.selectID \
+    JOIN idLinks idl ON tp.tmdbID = idl.tmdbID \
+    JOIN tagScores ts ON idl.mlID = ts.mlID \
+  ) \
+  SELECT t.tagTitle \
+  FROM tags t \
+  JOIN guess_tags gt ON t.tagID = gt.tagID \
+  JOIN motd_tags mt ON gt.tagID = mt.tagID \
+  ORDER BY gt.score DESC \
+  LIMIT 3;"
 
-  mysqlConnection.query(sql, [userID, userID, userID, userID, userID], (err, results, fields) => {
-    console.log(results);
-  }); 
+  mysqlConnection.query(sql, [userID, userID, userID, userID], (err, results, fields) => {
+    if (err) {
+      console.error('Error executing query:', err);
+      return;
+    }
+    console.log('Query results:', results);
+  });
 }
 
 Router.get("/getFormat", (req, res) => {
