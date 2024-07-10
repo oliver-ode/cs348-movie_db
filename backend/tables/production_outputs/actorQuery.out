@@ -1,0 +1,20 @@
++-------------------+---------+-----------+
+| actorName         | actorID | proximity |
++-------------------+---------+-----------+
+| Samuel L. Jackson |     168 | adjacent  |
+| Jeff Bridges      |     313 | adjacent  |
+| Robert Downey Jr. |     375 | adjacent  |
+| Gwyneth Paltrow   |     569 | adjacent  |
+| Leslie Bibb       |    4753 | adjacent  |
+| Terrence Howard   |    5024 | adjacent  |
+| Paul Bettany      |   79273 | adjacent  |
+| Peter Billingsley |   82526 | adjacent  |
+| Clark Gregg       |  163988 | adjacent  |
+| Jon Favreau       |  269463 | same      |
+| Tim Guinee        |  347375 | adjacent  |
+| Stan Lee          |  498278 | adjacent  |
+| Faran Tahir       |  846687 | adjacent  |
+| Shaun Toub        |  869467 | adjacent  |
+| America Olivo     | 1760388 | adjacent  |
+| Nazanin Boniadi   | 2258164 | adjacent  |
++-------------------+---------+-----------+
