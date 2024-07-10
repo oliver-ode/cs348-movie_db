@@ -39,6 +39,7 @@ function App() {
         setIsSearchContainerHidden(true);
         //alert('failed to insert - probably over ')
       } else {
+        if (data['isCorrect'] == 1) setIsSearchContainerHidden(true)
         addGuessedRow(data);
       }
     });
