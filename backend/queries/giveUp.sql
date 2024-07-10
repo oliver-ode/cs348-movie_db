@@ -13,7 +13,7 @@ begin
       and userCookie = user_cookie;
 
     while guessCount < 10 do
-        insert into guesses(challengeDate, userCookie, guessNumber, mlID)
+        insert ignore into guesses(challengeDate, userCookie, guessNumber, mlID)
         values (challenge_date, user_cookie, -1 * (guessCount + 1) , 1);
         set guessCount = guessCount + 1;
     end while;
