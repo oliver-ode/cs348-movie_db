@@ -35,31 +35,15 @@ function App() {
     })
     .then((response) => {console.log(response); return response.json()})
     .then((data) => {
-      if (data['result'] === 'FAILED') {
-        alert('failed to insert - probably over ')
+      if (data['result'] === 'over10') {
+        setIsSearchContainerHidden(true);
+        //alert('failed to insert - probably over ')
       } else {
         addGuessedRow(data);
       }
     });
   };
   
-  const revealMovie = () => {
-    fetch('http://localhost:4000/revealMOTD', {
-      method: 'get',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      
-      console.log(data);
-    })
-    .catch(err => {
-      console.log(err);
-    });
-  }
 
   const giveUpClick = () => {
     setIsSearchContainerHidden(true);

@@ -73,23 +73,10 @@ Router.get("/titleSearch", (req, res) => {
   );
 });
 
-Router.get("/revealMOTD", (req, res) => {
-  let sql = "CALL getMOTD(CURDATE());";
-  mysqlConnection.query(sql,
-    (err, results, fields) => {
-      if (!err) {
-        res.send({'MOTD': Object.values(JSON.parse(JSON.stringify(results)))[0]})
-      } else {
-        console.log(err);
-      }
-    }
-  )
-}
-);
 
 Router.get("/giveUp", (req, res) => {
   let query = req.query;
-  let sql = "insert into guesses values (CURDATE(), ?, ? , 1);";
+  let sql = "insert ignore into guesses values (CURDATE(), ?, ? , 1);";
   
   for(let i = 1; i < 10; i++){
     mysqlConnection.query(sql, [query.userID, -1*i],
@@ -129,7 +116,7 @@ Router.post("/makeGuess", (req, res) => {
     (err, results, fields) => {
       if (!err) {
         if (results[0]['totalGuesses'] >= MAX_GUESSES) {
-          res.send({'result': 'FAILED'})
+          res.send({'result': 'over10'})
         }
         else {
           sql = "INSERT INTO guesses VALUES (CURDATE(), ?, (SELECT mgn FROM (SELECT COUNT(*)+1 mgn FROM guesses WHERE userCookie=? AND challengeDate=CURDATE()) t), ?)";
