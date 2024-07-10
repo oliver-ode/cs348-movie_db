@@ -211,18 +211,37 @@ Router.get("/revealMOTD", (req, res) => {
 );
 
 Router.get("/giveUp", (req, res) => {
-  let body = req.body;
-  let sql = "CALL giveUpFill(CURDATE(), ?);";
-  mysqlConnection.query(sql, [body.userID],
+  let query = req.query;
+  let sql = "insert into guesses values (CURDATE(), ?, ? , 1);";
+  
+  for(let i = 1; i < 10; i++){
+    mysqlConnection.query(sql, [query.userID, -1*i],
+      (err, results, fields) => {
+        if (err){
+          console.log(err);
+        }
+      }
+    )
+  }
+
+  sql = "select mlID, mlTitle\
+  from mlMoviesWithYears\
+  where mlID = (\
+      select mlID from idLinks where tmdbId = (\
+          select tmdbID from tmdbPopularMovies where selectID = (\
+              select selectID from dailyMovies where challengeDate = CURDATE())));";
+
+  mysqlConnection.query(sql,
     (err, results, fields) => {
       if (!err){
-        res.sendStatus(204);
+        res.send({'MOTD': Object.values(JSON.parse(JSON.stringify(results)))})
       }
       else{
         console.log(err);
       }
     }
   )
+
 }
 );
 

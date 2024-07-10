@@ -43,29 +43,13 @@ function App() {
     });
   };
 
-  const revealMovie = () => {
-    fetch('http://localhost:4000/revealMOTD', {
-      method: 'get',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    })
-    .then(response => response.json())
-    .then(data => {
-      
-      console.log(data);
-    })
-    .catch(err => {
-      console.log(err);
-    });
-  }
 
   const giveUpClick = () => {
     setIsSearchContainerHidden(true);
-    fetch('http://localhost:4000/titleSearch?' + new URLSearchParams({'userID': cookies.get('userID')}))
+    fetch('http://localhost:4000/giveUp?' + new URLSearchParams({'userID': cookies.get('userID')}))
+    .then(response => response.json())
     .then((data) => {
-      revealMovie();
+      console.log(data);
     })
     .catch(err => {
       console.log(err);
