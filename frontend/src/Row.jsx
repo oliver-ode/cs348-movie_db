@@ -8,7 +8,7 @@ export default function Row({isCorrect, guess, title, studio, year, yearProximit
             <div>{guess}</div>
             <div>{title}</div>
             <div>{studio}</div>
-            <div className={isCorrect ? '' : yearProximity=='correct' ? 'correctElement' : ''}>{`${yearProximity=='high'||yearProximity=='low' ? (yearProximity=='high' ? '↑':'↓') : ''} ${year}`}</div>
+            <div className={isCorrect ? '' : yearProximity=='correct' ? 'correctElement' : ''}>{`${yearProximity=='high'||yearProximity=='low' ? (yearProximity=='high' ? '↓':'↑') : ''} ${year}`}</div>
             <div>
                 {casts.map(c => <p className={isCorrect ? '' : c.proximity=='same' ? 'correctElement': c.proximity=='adjacent' ? 'closeElement' : ''}>{c.actorName}</p>)}
             </div>
