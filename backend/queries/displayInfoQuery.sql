@@ -1,16 +1,15 @@
-SET @user_cookie = '49faa1b8-f8d4-4a4f-a68d-315b3de29df6';
+SET @user_cookie = 'be36fbac-f364-4b4f-b531-4baba05fc596';
 
 WITH guessed_movie AS (
-    SELECT g.mlID
+    SELECT g.mlID, g.guessNumber
     FROM guesses g
     WHERE g.challengeDate = CURDATE()
     AND g.userCookie = @user_cookie
-    AND g.guessNumber = (
-        SELECT mgn
-        FROM (SELECT COUNT(*) AS mgn
+    AND g.guessNumber in (
+        SELECT max(guessNumber)
             FROM guesses
             WHERE userCookie = @user_cookie
-                AND challengeDate = CURDATE()) AS subquery1
+                AND challengeDate = CURDATE()
     )
 )
 SELECT
@@ -29,4 +28,5 @@ LEFT JOIN genres ge ON m.mlID = ge.mlID
 LEFT JOIN imdbActors a ON i.imdbID = a.imdbID
 WHERE g.challengeDate = CURDATE()
   AND g.userCookie = @user_cookie
+  AND g.guessNumber = gm.guessNumber
 GROUP BY m.mlID, g.guessNumber, m.mlTitle, m.releaseYear;

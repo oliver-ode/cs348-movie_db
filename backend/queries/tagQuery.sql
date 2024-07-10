@@ -1,5 +1,5 @@
 -- Set the variables for the challenge date, user cookie, and guess number
-SET @cookie = '11bf5b37-e0b8-42e0-8dcf-dc8c4aefc000'; -- Adjust user cookie as necessary
+SET @cookie = 'be36fbac-f364-4b4f-b531-4baba05fc596'; -- Adjust user cookie as necessary
 
 WITH guess_tags AS (
     SELECT ts.tagID, ts.score
