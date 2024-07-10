@@ -59,6 +59,8 @@ Router.get("/getFormat", (req, res) => {
   );
 });
 
+
+
 Router.get("/titleSearch", (req, res) => {
   let params = req.query;
   const sql = "SELECT * FROM mlMoviesWithYears WHERE mlTitle LIKE ? LIMIT ?;";
@@ -78,7 +80,7 @@ Router.get("/giveUp", (req, res) => {
   let query = req.query;
   let sql = "insert ignore into guesses values (CURDATE(), ?, ? , 1);";
   
-  for(let i = 1; i < 10; i++){
+  for(let i = 1; i <= MAX_GUESSES; i++){
     mysqlConnection.query(sql, [query.userID, -1*i],
       (err, results, fields) => {
         if (err){
@@ -88,12 +90,22 @@ Router.get("/giveUp", (req, res) => {
     )
   }
 
-  sql = "select mlID, mlTitle\
-  from mlMoviesWithYears\
-  where mlID = (\
-      select mlID from idLinks where tmdbId = (\
-          select tmdbID from tmdbPopularMovies where selectID = (\
-              select selectID from dailyMovies where challengeDate = CURDATE())));";
+  sql = "with motd as (select mlID from idLinks where tmdbId = (\
+      select tmdbID from tmdbPopularMovies where selectID = (\
+          select selectID from dailyMovies where challengeDate = CURDATE())))\
+    SELECT\
+      '' AS guess,\
+      m.mlTitle AS title,\
+      '' AS studio,\
+      m.releaseYear AS year,\
+      GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts,\
+      GROUP_CONCAT(DISTINCT ge.genre ORDER BY ge.genre SEPARATOR ', ') AS genres\
+    FROM mlMoviesWithYears m\
+    LEFT JOIN idLinks i ON m.mlID = i.mlID\
+    LEFT JOIN genres ge ON m.mlID = ge.mlID\
+    LEFT JOIN imdbActors a ON i.imdbID = a.imdbID\
+    WHERE m.mlId = (select * from motd)\
+    GROUP BY m.mlID, m.mlTitle, m.releaseYear;";
 
   mysqlConnection.query(sql,
     (err, results, fields) => {
@@ -272,6 +284,21 @@ Router.post("/makeGuess", (req, res) => {
                   response['casts'] = results___[2];
                   response['genres'] = response['genres'].split(', ');
                   response['isCorrect'] = results__[0]['isCorrect']==1
+                  if(response['isCorrect']){
+                    sql = "insert ignore into guesses values (CURDATE(), ?, ? , 1);";
+  
+                    for(let i = 1; i <= MAX_GUESSES; i++){
+                      mysqlConnection.query(sql, [body.userID, -1*i],
+                        (err, results, fields) => {
+                          if (err){
+                            console.log(err);
+                          }
+                        }
+                      )
+                    }
+
+                  }
+
                   res.send(response);
                 });
               });
