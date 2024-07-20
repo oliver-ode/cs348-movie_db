@@ -140,9 +140,15 @@
 .give-up-button:hover {
   background-color: #c9302c; /* Darker red on hover */
 }
-.search-input-wrapper .search-icon {
-  position: absolute;
-  left: 697px;
-  top: 458px;
 
-}  
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative; /* Ensure the icon is positioned relative to this container */
+}
+
+.search-icon {
+  position: absolute;
+  right: 30px; /* Position it inside the input field */
+  cursor: pointer;
+}
