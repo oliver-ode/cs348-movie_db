@@ -25,6 +25,7 @@ function App() {
   }, []);
 
   const makeGuess = () => {
+    if (!searchValue.trim()) return; // Prevent search if search bar is blank
     fetch('http://localhost:4000/makeGuess', {method: 'post', headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json'
