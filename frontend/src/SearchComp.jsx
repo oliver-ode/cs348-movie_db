@@ -27,7 +27,7 @@ const renderSuggestion = suggestion => (
 
 export default class SearchBar extends React.Component {
   constructor(props) {
-    super();
+    super(props);
 
     // Autosuggest is a controlled component.
     // This means that you need to provide an input value
@@ -35,16 +35,12 @@ export default class SearchBar extends React.Component {
     // Suggestions also need to be provided to the Autosuggest,
     // and they are initially empty because the Autosuggest is closed.
     this.state = {
-      value: '',
       suggestions: [],
-      setGuessMLID: props.setGuessMLID
     };
   }
 
   onChange = (event, { newValue }) => {
-    this.setState({
-      value: newValue
-    });
+    this.props.setSearchValue(newValue);
   };
 
   // Autosuggest will call this function every time you need to update suggestions.
@@ -63,17 +59,17 @@ export default class SearchBar extends React.Component {
   };
 
   onSuggestionSelected = (event, { suggestion }) => {
-    this.state.setGuessMLID(suggestion['mlID'])
-    // console.log(suggestion)
-  }
+    this.props.setGuessMLID(suggestion['mlID']);
+  };
 
   render() {
-    const { value, suggestions } = this.state;
+    const { suggestions } = this.state;
+    const { searchValue } = this.props;
 
     // Autosuggest will pass through all these props to the input.
     const inputProps = {
       placeholder: 'Guess a Movie',
-      value,
+      value: searchValue,
       onChange: this.onChange
     };
 

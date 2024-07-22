@@ -15,6 +15,7 @@ function App() {
   const [guessMLID, setGuessMLID] = useState(-1);
   const [guessRows, setGuessRows] = useState<React.ReactElement[]>([]);
   const [isSearchContainerHidden, setIsSearchContainerHidden] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
 
   useEffect(() => {
      fetch('http://localhost:4000/getFormat')
@@ -42,6 +43,7 @@ function App() {
         if (data['isCorrect'] == 1) setIsSearchContainerHidden(true)
         addGuessedRow(data);
       }
+      setSearchValue(''); // Clear the search bar after making a guess
     });
   };
   
@@ -71,7 +73,7 @@ function App() {
       <p style={{whiteSpace: 'pre'}}>{movieGuessFormat}</p>
       <div className="search-container" style={{ display: isSearchContainerHidden ? 'none' : 'block' }}>
         <div className="search-input-wrapper">
-          <SearchBar setGuessMLID={setGuessMLID}/>
+          <SearchBar setGuessMLID={setGuessMLID}searchValue={searchValue} setSearchValue={setSearchValue} />
           <span className="search-icon" onClick={makeGuess}>&#128269;</span>
           <button className="give-up-button" onClick={giveUpClick}>Give up</button>
         </div>
