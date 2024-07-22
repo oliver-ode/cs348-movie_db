@@ -1,5 +1,5 @@
 -- Set the variables for the challenge date and guessed movie title
-SET @cookie = '49faa1b8-f8d4-4a4f-a68d-315b3de29df6';
+SET @cookie = 'be36fbac-f364-4b4f-b531-4baba05fc596';
 
 WITH guessed_movie AS (
     SELECT g.mlID
@@ -36,13 +36,13 @@ all_today_actor_movies AS (
   SELECT DISTINCT il.imdbID
   FROM imdbActors ia
   JOIN idLinks il ON ia.imdbID = il.imdbID
-  WHERE ia.actorID IN (SELECT actorID FROM today_actors) AND 
-    il.imdbID != (select i.imdbID from idLinks i where i.imdbId = movie_of_the_day)
+  WHERE ia.actorID IN (SELECT actorID FROM today_actors)
+    and il.mlID != (select mlID from guessed_movie)
 ),
 actors_acted_with_today_movie_actors AS (
   SELECT DISTINCT ia.actorID
   FROM imdbActors ia
-  WHERE ia.imdbID IN (SELECT imdbID FROM all_today_actor_movies)
+  WHERE ia.imdbID in (SELECT imdbID FROM all_today_actor_movies)
 )
 SELECT ga.actorName,
 ga.actorID,

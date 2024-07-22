@@ -1,5 +1,5 @@
 -- Set the variables for the challenge date, user cookie, and guess number 
-SET @cookie = '11bf5b37-e0b8-42e0-8dcf-dc8c4aefc000'; -- Adjust user cookie as necessary 
+SET @cookie = 'be36fbac-f364-4b4f-b531-4baba05fc596'; -- Adjust user cookie as necessary 
 
 -- select guessed movie
 WITH guessed_movie AS (
@@ -15,11 +15,11 @@ WITH guessed_movie AS (
       )
 ),
 -- Retrieve the tagIDs and tagScores of the guessed movie that are > 0.5
-WITH guess_tags AS ( 
+guess_tags AS ( 
     SELECT ts.tagID, ts.score 
     FROM tagScores ts
-    JOIN guessed_movie g on ts.ON ts.mlID = g.mlID
-    where ts.score > 0.5 
+    JOIN guessed_movie g on ts.mlID = g.mlID
+    where ts.score > 0.7 
 ), 
 -- retrieve the movie of the day
 movie_of_the_day AS (
@@ -40,19 +40,19 @@ join_tags AS (
     SELECT gt.tagID, mt.score 
     FROM guess_tags gt 
     JOIN motd_tags mt ON gt.tagID = mt.tagID 
-)  
+),  
 -- Get the top five tags for the movie of the day 
-top_tags as
+top_tags as (
   SELECT t.tagTitle, jt.score
-  FROM tagMeaning t 
+  FROM tags t 
   JOIN join_tags jt ON t.tagID = jt.tagID 
   ORDER BY jt.score DESC 
-  LIMIT 5;
---get each of the ranges
-SELECT t.tagTitle, t.score,
+  LIMIT 5
+)
+SELECT t.tagTitle,t.score,
 CASE
-  WHEN t.score >= 0.7  THEN 'same'
-  WHEN t.score >= 0.5 and t.score <0.7  THEN 'adjacent'
-  WHEN t.score < 0.5 THEN 'no'
-END AS proximity
+    WHEN t.score >= 0.7  THEN 'same'
+    WHEN t.score >= 0.5 and t.score <0.7  THEN 'adjacent'
+    WHEN t.score < 0.5 THEN 'no'
+  END AS proximity
 FROM top_tags t;
