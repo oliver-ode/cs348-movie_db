@@ -37,7 +37,8 @@ all_today_actor_movies AS (
   SELECT DISTINCT il.imdbID
   FROM imdbActors ia
   JOIN idLinks il ON ia.imdbID = il.imdbID
-  WHERE ia.actorID IN (SELECT actorID FROM today_actors)
+  WHERE ia.actorID IN (SELECT actorID FROM today_actors) AND 
+    il.imdbID != (select i.imdbID from idLinks i where i.imdbId = movie_of_the_day)
 ),
 actors_acted_with_today_movie_actors AS (
   SELECT DISTINCT ia.actorID
