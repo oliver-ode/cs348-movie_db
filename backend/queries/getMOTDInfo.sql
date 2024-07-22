@@ -1,6 +1,7 @@
 with motd as (select mlID from idLinks where tmdbId = (
           select tmdbID from tmdbPopularMovies where selectID = (
-              select selectID from dailyMovies where challengeDate = CURDATE())))
+              select selectID from dailyMovies where challengeDate = CURDATE()))),
+
 SELECT
   '' AS guess,
   m.mlTitle AS title,
