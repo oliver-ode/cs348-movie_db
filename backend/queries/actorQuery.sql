@@ -7,11 +7,10 @@ WITH guessed_movie AS (
     WHERE g.challengeDate = CURDATE()
       AND g.userCookie = @cookie
       AND g.guessNumber = (
-        SELECT mgn
-        FROM (SELECT COUNT(*) AS mgn
+        SELECT COUNT(*) AS mgn
               FROM guesses
               WHERE userCookie = @cookie
-                AND challengeDate = CURDATE()) AS subquery1
+                AND challengeDate = CURDATE()
       )
 ),
 movie_of_the_day AS (
