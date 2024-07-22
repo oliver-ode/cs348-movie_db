@@ -149,6 +149,6 @@
 
 .search-icon {
   position: absolute;
-  right: 30px; /* Position it inside the input field */
+  right: 120px; /* Position it inside the input field */
   cursor: pointer;
 }

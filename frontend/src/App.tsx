@@ -73,8 +73,9 @@ function App() {
         <div className="search-input-wrapper">
           <SearchBar setGuessMLID={setGuessMLID}/>
           <span className="search-icon" onClick={makeGuess}>&#128269;</span>
+          <button className="give-up-button" onClick={giveUpClick}>Give up</button>
         </div>
-        <button className="give-up-button" onClick={giveUpClick}>Give up</button>
+        
       </div>
       <div className='table'>
         <div className='row'>
