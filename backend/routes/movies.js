@@ -47,7 +47,7 @@ Router.get("/getFormat", (req, res) => {
           (err_, results_, fields) => {
             if (!err_) {
               if (results_.length == 1) {
-                res.send({'titleFormat': results_[0]['mlTitle'].replace(/[^\s-]/gi, '_').split('').join(' ')});
+                res.send({'titleFormat': results_[0]['mlTitle'].replace(/[(a-z|0-9)]/gi, '_').split('').join(' ')});
               } else {
                 console.error('Does not exist or exists too many times');
               }
@@ -60,14 +60,172 @@ Router.get("/getFormat", (req, res) => {
 });
 
 
-
 Router.get("/titleSearch", (req, res) => {
   let params = req.query;
-  const sql = "SELECT * FROM mlMoviesWithYears WHERE mlTitle LIKE ? LIMIT ?;";
+  const sql = "SELECT * FROM mlMoviesWithYears WHERE mlTitle LIKE ? ORDER BY releaseYear DESC LIMIT ?;";
   mysqlConnection.query(sql, ['%'+params.title+'%', MAX_SEARCH_RETURN],
     (err, results, fields) => {
       if (!err) {
         res.send({'results': Object.values(JSON.parse(JSON.stringify(results)))});
+      } else {
+        console.log(err);
+      }
+    }
+  );
+});
+
+
+Router.get("/getExistingGuesses", (req, res) => {
+  let query = req.query;
+  let totalGuesses; 
+  let response = [];
+  let sql = "SELECT MAX(guessNumber) mgn FROM guesses WHERE userCookie=? AND challengeDate=CURDATE();";
+  mysqlConnection.query(sql, [query.userID],
+    (err, results, fields) => {
+      if (!err) {
+        totalGuesses = results[0]['mgn']
+        for (let i = 1; i <= totalGuesses; i++) {
+          sql = "SELECT\
+            CASE\
+              WHEN (SELECT dm.selectID FROM dailyMovies dm WHERE dm.challengeDate = CURDATE()) = (SELECT tm.selectID FROM guesses g JOIN mlMoviesWithYears ml ON g.mlID = ml.mlID JOIN idLinks idl ON ml.mlID = idl.mlID JOIN tmdbPopularMovies tm ON idl.tmdbID = tm.tmdbID WHERE g.guessNumber = ? AND g.userCookie = ? AND g.challengeDate = CURDATE()) THEN 1\
+              ELSE 0\
+            END AS isCorrect;";
+          
+          mysqlConnection.query(sql, [i, query.userID], (err__, results__, fields__) => {
+            if (err__) {
+              console.error('Error executing query:', err__);
+              return;
+            }
+            sql = "WITH guessed_movie AS ( \
+            SELECT g.mlID \
+            FROM guesses g \
+            WHERE g.challengeDate = CURDATE() \
+              AND g.userCookie = ? \
+              AND g.guessNumber = ? \
+            ), \
+            daily_movie_year AS ( \
+              SELECT ml.releaseYear \
+              FROM dailyMovies dm \
+              JOIN tmdbPopularMovies tm ON dm.selectID = tm.selectID \
+              JOIN idLinks idl ON tm.tmdbID = idl.tmdbID \
+              JOIN mlMoviesWithYears ml ON idl.mlID = ml.mlID \
+              WHERE dm.challengeDate = CURDATE() \
+            ) \
+            SELECT \
+              0 AS isCorrect, \
+              g.guessNumber AS guess, \
+              m.mlTitle AS title, \
+              '' AS studio, \
+              m.releaseYear AS year, \
+              CASE \
+                WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) > m.releaseYear THEN 'low' \
+                WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) = m.releaseYear THEN 'correct' \
+                WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) < m.releaseYear THEN 'high' \
+              END AS yearProximity, \
+              GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts, \
+              GROUP_CONCAT(DISTINCT ge.genre ORDER BY ge.genre SEPARATOR ', ') AS genres \
+            FROM mlMoviesWithYears m \
+            JOIN guessed_movie gm ON m.mlID = gm.mlID \
+            JOIN guesses g ON m.mlID = g.mlID \
+            LEFT JOIN idLinks i ON m.mlID = i.mlID \
+            LEFT JOIN genres ge ON m.mlID = ge.mlID \
+            LEFT JOIN imdbActors a ON i.imdbID = a.imdbID \
+            WHERE g.challengeDate = CURDATE() \
+              AND g.userCookie = ? \
+              AND g.guessNumber = ? \
+            GROUP BY m.mlID, g.guessNumber, m.mlTitle, m.releaseYear; \
+            \
+            \
+            \
+            WITH guess_tags AS ( \
+                SELECT ts.tagID, ts.score \
+                FROM tagScores ts \
+                JOIN guesses g ON ts.mlID = g.mlID \
+                WHERE g.challengeDate = CURDATE() \
+                AND ts.score > 0.5 \
+                AND g.userCookie = ? \
+                AND g.guessNumber = ? \
+            ), \
+            motd_tags AS ( \
+              SELECT ts.tagID \
+              FROM dailyMovies dm \
+              JOIN tmdbPopularMovies tp ON dm.selectID = tp.selectID \
+              JOIN idLinks idl ON tp.tmdbID = idl.tmdbID \
+              JOIN tagScores ts ON idl.mlID = ts.mlID \
+              WHERE ts.score > 0.5 \
+            ) \
+            SELECT t.tagTitle \
+            FROM tags t \
+            JOIN guess_tags gt ON t.tagID = gt.tagID \
+            JOIN motd_tags mt ON gt.tagID = mt.tagID \
+            ORDER BY gt.score DESC \
+            LIMIT 3; \
+            \
+            \
+            \
+            WITH guessed_movie AS ( \
+              SELECT g.mlID \
+              FROM guesses g \
+              WHERE g.challengeDate = CURDATE() \
+                AND g.userCookie = ? \
+                AND g.guessNumber = ? \
+              ),\
+              movie_of_the_day AS (\
+                SELECT i.mlID\
+                FROM dailyMovies d\
+                JOIN tmdbPopularMovies t ON d.selectID = t.selectID\
+                JOIN idLinks i ON t.tmdbID = i.tmdbID\
+                WHERE d.challengeDate = CURDATE()\
+            ),\
+            today_actors AS (\
+              SELECT a.actorID, a.actorName\
+              FROM imdbActors a\
+              JOIN idLinks il ON a.imdbID = il.imdbID\
+              WHERE il.mlID = (SELECT mlID FROM movie_of_the_day)\
+            ),\
+            guessed_movie_actors AS (\
+              SELECT a.actorID, a.actorName\
+              FROM imdbActors a\
+              JOIN idLinks il ON a.imdbID = il.imdbID\
+              WHERE il.mlID = (SELECT mlID FROM guessed_movie)\
+            ),\
+            all_today_actor_movies AS (\
+            SELECT DISTINCT il.imdbID \
+            FROM imdbActors ia \
+            JOIN idLinks il ON ia.imdbID = il.imdbID\
+            WHERE ia.actorID IN (SELECT actorID FROM today_actors)\
+            ),\
+            actors_acted_with_today_movie_actors AS (\
+            SELECT DISTINCT ia.actorID \
+            FROM imdbActors ia \
+            WHERE ia.imdbID IN (SELECT imdbID FROM all_today_actor_movies)\
+            )\
+            SELECT ga.actorName, \
+            ga.actorID, \
+            CASE \
+              WHEN ga.actorID IN (SELECT actorID FROM today_actors) THEN 'same'\
+              WHEN ga.actorID IN (SELECT actorID FROM actors_acted_with_today_movie_actors) THEN 'adjacent'\
+              WHEN ga.actorID NOT IN (SELECT actorID FROM today_actors) AND ga.actorID NOT IN (SELECT actorID FROM actors_acted_with_today_movie_actors) THEN 'no'\
+            END AS proximity \
+            FROM guessed_movie_actors ga;"
+            
+            mysqlConnection.query(sql, [query.userID, i, query.userID, i, query.userID, i, query.userID, i], (err___, results___, fields___) => {
+              if (err___) {
+                console.error('Error executing query:', err___);
+                return;
+              }
+              let resp = results___[0][0];
+              resp['tags'] = results___[1].map(e => e.tagTitle);
+              resp['casts'] = results___[2];
+              resp['genres'] = resp['genres'].split(', ');
+              resp['isCorrect'] = results__[0]['isCorrect']==1
+              response.push(resp);
+              if (response.length == totalGuesses) {
+                res.send(response);
+              }
+            });
+          });
+        }
       } else {
         console.log(err);
       }
@@ -118,6 +276,7 @@ Router.get("/giveUp", (req, res) => {
     }
   )
 });
+
 
 Router.post("/makeGuess", (req, res) => {
   let body = req.body;
@@ -385,77 +544,5 @@ Router.post("/makeGuess", (req, res) => {
     }
   );
 });
-
-// Router.post("/", (req, res) => {
-//   let qb = req.body;
-//   const sql =
-//     "SET @ID = ?;SET @Name = ?;SET @Position = ?;SET @Team = ?;SET @OpposingTeam = ?;SET @JodySmith = ?;SET @EricMoody = ?;SET @JohnFerguson = ?;SET @FantasyData = ?; CALL Add_or_Update_QB(@ID, @Name, @Position, @Team, @OpposingTeam, @JodySmith, @EricMoody, @JohnFerguson, @FantasyData);";
-//   mysqlConnection.query(
-//     sql,
-//     [
-//       qb.ID,
-//       qb.Name,
-//       qb.Position,
-//       qb.Team,
-//       qb.OpposingTeam,
-//       qb.JodySmith,
-//       qb.EricMoody,
-//       qb.JohnFerguson,
-//       qb.FantasyData,
-//     ],
-//     (err, results, fields) => {
-//       if (!err) {
-//         results.forEach((element) => {
-//           if (element.constructor == Array) res.send(element);
-//         });
-//       } else {
-//         console.log(err);
-//       }
-//     }
-//   );
-// });
-
-// Router.put("/", (req, res) => {
-//   let qb = req.body;
-//   const sql =
-//     "SET @ID = ?;SET @Name = ?;SET @Position = ?;SET @Team = ?;SET @OpposingTeam = ?;SET @JodySmith = ?;SET @EricMoody = ?;SET @JohnFerguson = ?;SET @FantasyData = ?; CALL Add_or_Update_QB(@ID, @Name, @Position, @Team, @OpposingTeam, @JodySmith, @EricMoody, @JohnFerguson, @FantasyData);";
-//   mysqlConnection.query(
-//     sql,
-//     [
-//       qb.ID,
-//       qb.Name,
-//       qb.Position,
-//       qb.Team,
-//       qb.OpposingTeam,
-//       qb.JodySmith,
-//       qb.EricMoody,
-//       qb.JohnFerguson,
-//       qb.FantasyData,
-//     ],
-//     (err, results, fields) => {
-//       if (!err) {
-//         res.send(
-//           "The data for the selected quarterback has been successfully updated."
-//         );
-//       } else {
-//         console.log(err);
-//       }
-//     }
-//   );
-// });
-
-// Router.delete("/:id", (req, res) => {
-//   mysqlConnection.query(
-//     "DELETE FROM quarterback_rankings WHERE ID= ? ",
-//     [req.params.id],
-//     (err, results, fields) => {
-//       if (!err) {
-//         res.send("The selected quarterback has been successfully deleted.");
-//       } else {
-//         console.log(err);
-//       }
-//     }
-//   );
-// });
 
 module.exports = Router;

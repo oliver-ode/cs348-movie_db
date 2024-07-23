@@ -1,3 +1,5 @@
+SET GLOBAL local_infile = 'ON';
+
 -- Wipe old database
 DROP DATABASE IF EXISTS moviedb;
 
