@@ -49,7 +49,7 @@ top_tags as (
   ORDER BY jt.score DESC 
   LIMIT 5
 )
-SELECT t.tagTitle,t.score,
+SELECT DISTINCT t.tagTitle,
 CASE
     WHEN t.score >= 0.7  THEN 'same'
     WHEN t.score >= 0.5 and t.score <0.7  THEN 'adjacent'

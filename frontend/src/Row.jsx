@@ -12,10 +12,10 @@ export default function Row({isCorrect, guess, title, year, yearProximity, casts
                 {casts.map(c => <p className={isCorrect ? '' : c.proximity=='same' ? 'correctElement': c.proximity=='adjacent' ? 'closeElement' : ''}>{c.actorName}</p>)}
             </div>
             <div>
-                {genres.map(g => <p>{g}</p>)}
+                {genres.map(g => <p className={isCorrect ? '' : g.proximity=='same' ? 'correctElement': g.proximity=='adjacent' ? 'closeElement' : ''}>{g.genre}</p>)}
             </div>
             <div>
-                {tags.map(t => <p>{t}</p>)}
+                {tags.map(t => <p className={isCorrect ? '' : t.proximity=='same' ? 'correctElement': t.proximity=='adjacent' ? 'closeElement' : ''}>{t.tagTitle}</p>)}
             </div>
         </div>
     );
