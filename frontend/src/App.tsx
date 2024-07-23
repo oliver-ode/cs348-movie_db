@@ -62,7 +62,7 @@ function App() {
 
   };
   
-  function addGuessedRow(data: {isCorrect: boolean; guess: number; title: string; studio: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }) {
+  function addGuessedRow(data: {isCorrect: boolean; guess: number; title: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }) {
       setGuessRows([Row(data), ...guessRows]);
   }
 
@@ -84,7 +84,6 @@ function App() {
         <div className='row'>
           <div>Guess #</div>
           <div>Title</div>
-          <div>Studio</div>
           <div>Year</div>
           <div>Cast</div>
           <div>Genre</div>
