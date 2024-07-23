@@ -18,10 +18,16 @@ function App() {
   const [searchValue, setSearchValue] = useState('');
 
   useEffect(() => {
-     fetch('http://localhost:4000/getFormat')
-        .then((response) => response.json())
-        .then((data) => {setMovieGuessFormat(data['titleFormat'])})
-        .catch((err) => {console.log(err)});
+    fetch('http://localhost:4000/getFormat')
+      .then((response) => response.json())
+      .then((data) => {setMovieGuessFormat(data['titleFormat'])})
+      .catch((err) => {console.log(err)});
+    fetch('http://localhost:4000/getExistingGuesses?' + new URLSearchParams({'userID': cookies.get('userID')}))
+    .then((response) => response.json())
+    .then((data) => {
+      addGuessedRows(data);
+    })
+    .catch((err) => {console.log(err)});
   }, []);
 
   const makeGuess = () => {
@@ -35,7 +41,7 @@ function App() {
         guessMLID: guessMLID
       })
     })
-    .then((response) => {console.log(response); return response.json()})
+    .then((response) => response.json())
     .then((data) => {
       if (data['result'] === 'over10') {
         setIsSearchContainerHidden(true);
@@ -65,6 +71,10 @@ function App() {
   function addGuessedRow(data: {isCorrect: boolean; guess: number; title: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }) {
       setGuessRows([Row(data), ...guessRows]);
   }
+
+  function addGuessedRows(data: [{isCorrect: boolean; guess: number; title: string; studio: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }]) {
+    setGuessRows([...data.sort((a, b) => a.guess < b.guess ? 1 : -1).map((e) => Row(e)), ...guessRows]);
+}
 
   return (
     <div className="App">
