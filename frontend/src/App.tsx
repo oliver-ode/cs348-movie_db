@@ -25,6 +25,12 @@ function App() {
     fetch('http://localhost:4000/getExistingGuesses?' + new URLSearchParams({'userID': cookies.get('userID')}))
     .then((response) => response.json())
     .then((data) => {
+      for (let i = 0; i < data.length; i++) {
+        if (data[i]['isCorrect']) {
+          setMovieGuessFormat(data[i]['title'].split('').join(' '));
+          setIsSearchContainerHidden(true);
+        }
+      }
       addGuessedRows(data);
     })
     .catch((err) => {console.log(err)});
@@ -47,7 +53,10 @@ function App() {
         setIsSearchContainerHidden(true);
         //alert('failed to insert - probably over ')
       } else {
-        if (data['isCorrect'] == 1) setIsSearchContainerHidden(true)
+        if (data['isCorrect'] == 1) {
+          setMovieGuessFormat(data['title'].split('').join(' '));
+          setIsSearchContainerHidden(true)
+        }
         addGuessedRow(data);
       }
       setSearchValue(''); // Clear the search bar after making a guess
