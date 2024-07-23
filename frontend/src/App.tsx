@@ -83,7 +83,7 @@ function App() {
 
   function addGuessedRows(data: [{isCorrect: boolean; guess: number; title: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }]) {
     setGuessRows([...data.sort((a, b) => a.guess < b.guess ? 1 : -1).map((e) => Row(e)), ...guessRows]);
-}
+  }
 
   return (
     <div className="App">
