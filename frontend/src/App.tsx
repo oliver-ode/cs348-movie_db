@@ -72,7 +72,7 @@ function App() {
       setGuessRows([Row(data), ...guessRows]);
   }
 
-  function addGuessedRows(data: [{isCorrect: boolean; guess: number; title: string; studio: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }]) {
+  function addGuessedRows(data: [{isCorrect: boolean; guess: number; title: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }]) {
     setGuessRows([...data.sort((a, b) => a.guess < b.guess ? 1 : -1).map((e) => Row(e)), ...guessRows]);
 }
 
