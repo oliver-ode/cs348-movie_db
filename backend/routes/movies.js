@@ -372,12 +372,15 @@ Router.post("/makeGuess", (req, res) => {
                   JOIN tagScores ts ON idl.mlID = ts.mlID \
                   WHERE ts.score > 0.5 \
                 ) \
-                SELECT t.tagTitle \
-                FROM tags t \
-                JOIN guess_tags gt ON t.tagID = gt.tagID \
-                JOIN motd_tags mt ON gt.tagID = mt.tagID \
-                ORDER BY gt.score DESC \
-                LIMIT 3; \
+                SELECT tagTitle \
+                FROM (\
+                  SELECT DISTINCT t.tagTitle, gt.score\
+                  FROM tags t \
+                  JOIN guess_tags gt ON t.tagID = gt.tagID \
+                  JOIN motd_tags mt ON gt.tagID = mt.tagID\
+                  ) subquery\
+                  ORDER BY subquery.score DESC\
+                  LIMIT 3;\
                 \
                 \
                 \
