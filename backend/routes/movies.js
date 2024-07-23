@@ -47,7 +47,7 @@ Router.get("/getFormat", (req, res) => {
           (err_, results_, fields) => {
             if (!err_) {
               if (results_.length == 1) {
-                res.send({'titleFormat': results_[0]['mlTitle'].replace(/[^\s-]/gi, '_').split('').join(' ')});
+                res.send({'titleFormat': results_[0]['mlTitle'].replace(/[(a-z|0-9)]/gi, '_').split('').join(' ')});
               } else {
                 console.error('Does not exist or exists too many times');
               }
