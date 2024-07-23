@@ -62,7 +62,7 @@ Router.get("/getFormat", (req, res) => {
 
 Router.get("/titleSearch", (req, res) => {
   let params = req.query;
-  const sql = "SELECT * FROM mlMoviesWithYears WHERE mlTitle LIKE ? LIMIT ?;";
+  const sql = "SELECT * FROM mlMoviesWithYears WHERE mlTitle LIKE ? ORDER BY releaseYear DESC LIMIT ?;";
   mysqlConnection.query(sql, ['%'+params.title+'%', MAX_SEARCH_RETURN],
     (err, results, fields) => {
       if (!err) {
