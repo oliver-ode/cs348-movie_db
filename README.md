@@ -43,3 +43,6 @@ sudo /usr/local/mysql/bin/mysql -u root -p --local-infile=1
 ```sql
 SOURCE createdb.sql;
 ```
+## Production Data Tests + Outputs
+Production data tests/queries can be found in file called : test-production.sql
+Production data outputs can be found in : backend < tables < production_outputs
