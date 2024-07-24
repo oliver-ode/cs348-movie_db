@@ -70,20 +70,8 @@ function App() {
     fetch('http://localhost:4000/giveUp?' + new URLSearchParams({'userID': cookies.get('userID')}))
       .then(response => response.json())
       .then((data) => {
-        if (data.length > 0) {
-          addGuessedRow({
-            isCorrect: false,
-            giveUp: true,
-            guess: 0, // Assign a value that indicates it's the give-up row
-            title: data[0].title,
-            year: data[0].year,
-            yearProximity: data[0].yearProximity,
-            casts: data[0].casts.split(', ').map((actorName: string) => ({ actorName, proximity: 'regular' })), // Specify type for actorName
-            genres: data[0].genres.split(', ').map((genre: string) => ({ genre, proximity: 'regular' })), // Specify type for genre
-            tags: data[0].tags.split(', ').map((tags: string) => ({ tags, proximity: 'regular' })) // Specify type for genre
-          });
-          setMovieGuessFormat(data[0]['title'].split('').join(' '));
-        }
+        addGuessedRow(data);
+        setMovieGuessFormat(data['title'].split('').join(' '));
       })
       .catch(err => {
         console.log(err);
