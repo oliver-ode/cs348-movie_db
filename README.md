@@ -48,6 +48,6 @@ SOURCE production_db/createdb.sql
 Sql Queries can be found in : backend < queries
 
 ## Production Data Tests + Outputs
-Production data tests/queries can be found in file called : test-production.sql
+Production data tests/queries can be found in file called :production_db < test-production.sql
 
-Production data outputs can be found in : backend < tables < production_outputs
+Production data outputs can be found in : production_db < production_outputs
