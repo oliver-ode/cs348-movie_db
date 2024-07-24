@@ -1,7 +1,7 @@
 # cs348-movie_db
 
 ## Backend (Node + Express)
-CD into "backend" : 'cd backend'
+CD into "backend" : `cd backend`
 
 Runs on port `4000`
 
@@ -10,7 +10,7 @@ Install packages: `npm install`
 Start: `npm run start`
 
 ## Frontend (Typescript + React)
-CD into "frontend" : 'cd frontend'
+CD into "frontend" : `cd frontend`
 
 Runs on port `3000`
 
