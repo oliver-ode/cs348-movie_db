@@ -26,7 +26,7 @@ function App() {
     .then((response) => response.json())
     .then((data) => {
       for (let i = 0; i < data.length; i++) {
-        if (data[i]['isCorrect']) {
+        if (data[i]['isCorrect'] || data[i]['giveUp']) {
           setMovieGuessFormat(data[i]['title'].split('').join(' '));
           setIsSearchContainerHidden(true);
         }
@@ -52,29 +52,18 @@ function App() {
     })
     .then((response) => response.json())
     .then((data) => {
+      addGuessedRow(data);
+      setSearchValue(''); // Clear the search bar after making a guess
       if (data['isCorrect'] == 1) {
         setMovieGuessFormat(data['title'].split('').join(' '));
         setIsSearchContainerHidden(true)
       }
-      if (data['maxGuessesReached'] == 1) setIsSearchContainerHidden(true);
-      addGuessedRow(data);
-      setSearchValue(''); // Clear the search bar after making a guess
+      if (data['maxGuessesReached'] == 1) {
+        setIsSearchContainerHidden(true);
+        giveUpClick();
+      }
     });
   };
-  
-
-  // const giveUpClick = () => {
-  //   setIsSearchContainerHidden(true);
-  //   fetch('http://localhost:4000/giveUp?' + new URLSearchParams({'userID': cookies.get('userID')}))
-  //   .then(response => response.json())
-  //   .then((data) => {
-  //     console.log(data);
-  //   })
-  //   .catch(err => {
-  //     console.log(err);
-  //   });
-
-  // };
 
   const giveUpClick = () => {
     setIsSearchContainerHidden(true);
@@ -93,6 +82,7 @@ function App() {
             genres: data[0].genres.split(', ').map((genre: string) => ({ genre, proximity: 'regular' })), // Specify type for genre
             tags: data[0].tags.split(', ').map((tags: string) => ({ tags, proximity: 'regular' })) // Specify type for genre
           });
+          setMovieGuessFormat(data[0]['title'].split('').join(' '));
         }
       })
       .catch(err => {
@@ -101,11 +91,11 @@ function App() {
   };
   
   function addGuessedRow(data: {isCorrect: boolean; giveUp: boolean; guess: number; title: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }) {
-      setGuessRows([Row(data), ...guessRows]);
+    setGuessRows(oldRows => [Row(data), ...oldRows]);
   }
 
   function addGuessedRows(data: [{isCorrect: boolean; giveUp: boolean; guess: number; title: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }]) {
-    setGuessRows([...data.sort((a, b) => a.guess < b.guess ? 1 : -1).map((e) => Row(e)), ...guessRows]);
+    setGuessRows(oldRows => [...data.sort((a, b) => !a.guess ? -1 : a.guess < b.guess ? 1 : -1).map((e) => Row(e)), ...guessRows]);
   }
 
   return (
