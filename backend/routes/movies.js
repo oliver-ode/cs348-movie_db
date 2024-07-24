@@ -589,7 +589,8 @@ Router.post("/makeGuess", (req, res) => {
                 response['casts'] = results___[2];
                 response['genres'] = results___[3];
                 console.log(response['genres'] = results___[3]);
-                response['isCorrect'] = results__[0]['isCorrect']==1
+                response['isCorrect'] = results__[0]['isCorrect']==1;
+                response['giveUp'] = 0;
                 response['maxGuessesReached'] = results[0]['totalGuesses'] == MAX_GUESSES-1;
                 if(response['isCorrect']){
                   sql = "insert ignore into guesses values (CURDATE(), ?, ? , 1);";
