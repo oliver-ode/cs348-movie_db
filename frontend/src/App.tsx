@@ -90,8 +90,8 @@ function App() {
             title: data[0].title,
             year: data[0].year,
             yearProximity: data[0].yearProximity,
-            casts: data[0].casts.split(', ').map((actorName: string) => ({ actorName, proximity: 'same' })), // Specify type for actorName
-            genres: data[0].genres.split(', ').map((genre: string) => ({ genre, proximity: 'same' })), // Specify type for genre
+            casts: data[0].casts.split(', ').map((actorName: string) => ({ actorName, proximity: 'regular' })), // Specify type for actorName
+            genres: data[0].genres.split(', ').map((genre: string) => ({ genre, proximity: 'regular' })), // Specify type for genre
             tags: data[0].tags // Assuming no tags are available for give-up
           });
         }

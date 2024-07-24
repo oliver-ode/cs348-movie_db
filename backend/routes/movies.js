@@ -329,19 +329,14 @@ Router.get("/giveUp", (req, res) => {
       SELECT\
         0 AS isCorrect,\
         m.mlTitle AS title,\
-        '' AS studio,\
         m.releaseYear AS year,\
-        CASE\
-          WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) > m.releaseYear THEN 'low'\
-          WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) = m.releaseYear THEN 'correct'\
-          WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) < m.releaseYear THEN 'high'\
-        END AS yearProximity,\
+        'regular' AS yearProximity,\
         GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts,\
-        GROUP_CONCAT(DISTINCT ge.genre ORDER BY ge.genre SEPARATOR ', ') AS genres\
+        GROUP_CONCAT(DISTINCT g.genre ORDER BY g.genre SEPARATOR ', ') AS genres\
       FROM mlMoviesWithYears m\
       JOIN movie_of_the_day motd ON m.mlID = motd.mlID\
       LEFT JOIN idLinks i ON m.mlID = i.mlID\
-      LEFT JOIN genres ge ON m.mlID = ge.mlID\
+      LEFT JOIN genres g ON m.mlID = g.mlID\
       LEFT JOIN imdbActors a ON i.imdbID = a.imdbID\
       GROUP BY m.mlID, m.mlTitle, m.releaseYear;"
 
