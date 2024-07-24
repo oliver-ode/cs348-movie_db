@@ -30,6 +30,9 @@ function App() {
           setMovieGuessFormat(data[i]['title'].split('').join(' '));
           setIsSearchContainerHidden(true);
         }
+        if (data[i]['maxGuessesReached'] == 1) {
+          setIsSearchContainerHidden(true);
+        }
       }
       addGuessedRows(data);
     })

@@ -281,6 +281,7 @@ Router.get("/getExistingGuesses", (req, res) => {
               resp['genres'] = results___[3];
               resp['isCorrect'] = results__[0]['isCorrect']==1;
               resp['giveUp'] = 0;
+              resp['maxGuessesReached'] = totalGuesses==MAX_GUESSES;
               response.push(resp);
               if (response.length == totalGuesses) {
                 res.send(response);
