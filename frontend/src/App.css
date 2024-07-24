@@ -1,3 +1,4 @@
+/* General styles for the application */
 .App {
   min-height: 100vh;
   display: flex;
@@ -21,8 +22,8 @@
 }
 
 .row > div {
-  border-left: 2px solid #e1e1e1;
-  border-right: 2px solid #e1e1e1;
+  /* border-left: 2px solid #e1e1e1; */
+  /* border-right: 2px solid #e1e1e1;*/
   border-width: 3px;
   flex: 1;
   text-align: center;
@@ -40,12 +41,47 @@
   background-color: #6ccd4a;
 }
 
+.giveUp {
+  font-size: 18px;
+  display: flex;
+  background-color: #d9534f;
+  margin: 20px;
+  min-height: 40px;
+  align-items: center;
+}
+
 .correctElement {
   color: #6ccd4a;
 }
 
 .closeElement {
-  color: #ece314;
+  color: #f2c83d;
+}
+
+/* Scrollable container styles */
+.scrollable-container {
+  max-height: 200px; /* Adjust height as needed to show 5 actors */
+  overflow-y: scroll;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom scrollbar styles */
+.scrollable-container::-webkit-scrollbar {
+  width: 12px; /* Width of the scrollbar */
+}
+
+.scrollable-container::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Background of the scrollbar track */
+}
+
+.scrollable-container::-webkit-scrollbar-thumb {
+  background: #888; /* Scrollbar color */
+  border-radius: 6px; /* Optional: round the scrollbar */
+}
+
+.scrollable-container::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Scrollbar color on hover */
 }
 
 .react-autosuggest__container {

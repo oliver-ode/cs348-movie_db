@@ -60,24 +60,48 @@ function App() {
   };
   
 
+  // const giveUpClick = () => {
+  //   setIsSearchContainerHidden(true);
+  //   fetch('http://localhost:4000/giveUp?' + new URLSearchParams({'userID': cookies.get('userID')}))
+  //   .then(response => response.json())
+  //   .then((data) => {
+  //     console.log(data);
+  //   })
+  //   .catch(err => {
+  //     console.log(err);
+  //   });
+
+  // };
+
   const giveUpClick = () => {
     setIsSearchContainerHidden(true);
     fetch('http://localhost:4000/giveUp?' + new URLSearchParams({'userID': cookies.get('userID')}))
-    .then(response => response.json())
-    .then((data) => {
-      console.log(data);
-    })
-    .catch(err => {
-      console.log(err);
-    });
-
+      .then(response => response.json())
+      .then((data) => {
+        if (data.length > 0) {
+          addGuessedRow({
+            isCorrect: false,
+            giveUp: true,
+            guess: 0, // Assign a value that indicates it's the give-up row
+            title: data[0].title,
+            year: data[0].year,
+            yearProximity: data[0].yearProximity,
+            casts: data[0].casts.split(', ').map((actorName: string) => ({ actorName, proximity: 'same' })), // Specify type for actorName
+            genres: data[0].genres.split(', ').map((genre: string) => ({ genre, proximity: 'same' })), // Specify type for genre
+            tags: data[0].tags // Assuming no tags are available for give-up
+          });
+        }
+      })
+      .catch(err => {
+        console.log(err);
+      });
   };
   
-  function addGuessedRow(data: {isCorrect: boolean; guess: number; title: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }) {
+  function addGuessedRow(data: {isCorrect: boolean; giveUp: boolean; guess: number; title: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }) {
       setGuessRows([Row(data), ...guessRows]);
   }
 
-  function addGuessedRows(data: [{isCorrect: boolean; guess: number; title: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }]) {
+  function addGuessedRows(data: [{isCorrect: boolean; giveUp: boolean; guess: number; title: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }]) {
     setGuessRows([...data.sort((a, b) => a.guess < b.guess ? 1 : -1).map((e) => Row(e)), ...guessRows]);
   }
 

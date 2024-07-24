@@ -279,7 +279,8 @@ Router.get("/getExistingGuesses", (req, res) => {
               resp['tags'] = results___[1];
               resp['casts'] = results___[2];
               resp['genres'] = results___[3];
-              resp['isCorrect'] = results__[0]['isCorrect']==1
+              resp['isCorrect'] = results__[0]['isCorrect']==1;
+              resp['giveUp'] = 0;
               response.push(resp);
               if (response.length == totalGuesses) {
                 res.send(response);
@@ -297,6 +298,7 @@ Router.get("/getExistingGuesses", (req, res) => {
 
 Router.get("/giveUp", (req, res) => {
   let query = req.query;
+  let response = [];
   let sql = "insert ignore into guesses values (CURDATE(), ?, ? , 1);";
   
   for(let i = 1; i <= MAX_GUESSES; i++){
@@ -309,33 +311,50 @@ Router.get("/giveUp", (req, res) => {
     )
   }
 
-  sql = "with motd as (select mlID from idLinks where tmdbId = (\
-      select tmdbID from tmdbPopularMovies where selectID = (\
-          select selectID from dailyMovies where challengeDate = CURDATE())))\
-    SELECT\
-      '' AS guess,\
-      m.mlTitle AS title,\
-      '' AS studio,\
-      m.releaseYear AS year,\
-      GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts,\
-      GROUP_CONCAT(DISTINCT ge.genre ORDER BY ge.genre SEPARATOR ', ') AS genres\
-    FROM mlMoviesWithYears m\
-    LEFT JOIN idLinks i ON m.mlID = i.mlID\
-    LEFT JOIN genres ge ON m.mlID = ge.mlID\
-    LEFT JOIN imdbActors a ON i.imdbID = a.imdbID\
-    WHERE m.mlId = (select * from motd)\
-    GROUP BY m.mlID, m.mlTitle, m.releaseYear;";
+  sql = "WITH movie_of_the_day AS (\
+          SELECT i.mlID\
+          FROM dailyMovies d\
+          JOIN tmdbPopularMovies t ON d.selectID = t.selectID\
+          JOIN idLinks i ON t.tmdbID = i.tmdbID\
+          WHERE d.challengeDate = CURDATE()\
+      ),\
+      daily_movie_year AS (\
+        SELECT ml.releaseYear\
+        FROM mlMoviesWithYears ml\
+        JOIN idLinks idl ON ml.mlID = idl.mlID\
+        JOIN tmdbPopularMovies tm ON idl.tmdbID = tm.tmdbID\
+        JOIN dailyMovies dm ON tm.selectID = dm.selectID\
+        WHERE dm.challengeDate = CURDATE()\
+      )\
+      SELECT\
+        0 AS isCorrect,\
+        m.mlTitle AS title,\
+        '' AS studio,\
+        m.releaseYear AS year,\
+        CASE\
+          WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) > m.releaseYear THEN 'low'\
+          WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) = m.releaseYear THEN 'correct'\
+          WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) < m.releaseYear THEN 'high'\
+        END AS yearProximity,\
+        GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts,\
+        GROUP_CONCAT(DISTINCT ge.genre ORDER BY ge.genre SEPARATOR ', ') AS genres\
+      FROM mlMoviesWithYears m\
+      JOIN movie_of_the_day motd ON m.mlID = motd.mlID\
+      LEFT JOIN idLinks i ON m.mlID = i.mlID\
+      LEFT JOIN genres ge ON m.mlID = ge.mlID\
+      LEFT JOIN imdbActors a ON i.imdbID = a.imdbID\
+      GROUP BY m.mlID, m.mlTitle, m.releaseYear;"
 
-  mysqlConnection.query(sql,
-    (err, results, fields) => {
-      if (!err){
-        res.send({'MOTD': Object.values(JSON.parse(JSON.stringify(results)))})
-      }
-      else{
-        console.log(err);
-      }
+  mysqlConnection.query(sql, [], (err, results, fields) => {
+    if (!err) {
+      let resp = results[0];
+      resp['tags'] = [];
+      response.push(resp);
+      res.send(response);
+    } else {
+      console.error('Error executing query:', err);
     }
-  )
+  });
 });
 
 
