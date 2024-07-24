@@ -30,6 +30,9 @@ function App() {
           setMovieGuessFormat(data[i]['title'].split('').join(' '));
           setIsSearchContainerHidden(true);
         }
+        if (data[i]['maxGuessesReached'] == 1) {
+          setIsSearchContainerHidden(true);
+        }
       }
       addGuessedRows(data);
     })
@@ -49,16 +52,12 @@ function App() {
     })
     .then((response) => response.json())
     .then((data) => {
-      if (data['result'] === 'over10') {
-        setIsSearchContainerHidden(true);
-        //alert('failed to insert - probably over ')
-      } else {
-        if (data['isCorrect'] == 1) {
-          setMovieGuessFormat(data['title'].split('').join(' '));
-          setIsSearchContainerHidden(true)
-        }
-        addGuessedRow(data);
+      if (data['isCorrect'] == 1) {
+        setMovieGuessFormat(data['title'].split('').join(' '));
+        setIsSearchContainerHidden(true)
       }
+      if (data['maxGuessesReached'] == 1) setIsSearchContainerHidden(true);
+      addGuessedRow(data);
       setSearchValue(''); // Clear the search bar after making a guess
     });
   };
