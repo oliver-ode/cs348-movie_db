@@ -333,20 +333,24 @@ Router.get("/giveUp", (req, res) => {
         m.releaseYear AS year,\
         'regular' AS yearProximity,\
         GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts,\
-        GROUP_CONCAT(DISTINCT g.genre ORDER BY g.genre SEPARATOR ', ') AS genres\
+        GROUP_CONCAT(DISTINCT g.genre ORDER BY g.genre SEPARATOR ', ') AS genres,\
+        GROUP_CONCAT(DISTINCT t.tagTitle ORDER BY ts.score DESC SEPARATOR ', ') AS tags\
       FROM mlMoviesWithYears m\
       JOIN movie_of_the_day motd ON m.mlID = motd.mlID\
       LEFT JOIN idLinks i ON m.mlID = i.mlID\
       LEFT JOIN genres g ON m.mlID = g.mlID\
       LEFT JOIN imdbActors a ON i.imdbID = a.imdbID\
+      LEFT JOIN tagScores ts ON m.mlID = ts.mlID\
+      LEFT JOIN tags t ON ts.tagID = t.tagID\
       GROUP BY m.mlID, m.mlTitle, m.releaseYear;"
 
   mysqlConnection.query(sql, [], (err, results, fields) => {
     if (!err) {
       let resp = results[0];
-      resp['tags'] = [];
+      // resp['tags'] = [];
       response.push(resp);
       res.send(response);
+      console.log(response[0]);
     } else {
       console.error('Error executing query:', err);
     }
