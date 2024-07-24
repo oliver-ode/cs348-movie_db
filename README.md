@@ -41,7 +41,7 @@ sudo /usr/local/mysql/bin/mysql -u root -p --local-infile=1
 `SELECT @@secure_file_priv;`
 
 ```sql
-SOURCE createdb.sql;
+SOURCE production_db/createdb.sql
 ```
 
 ## SQL Queries
