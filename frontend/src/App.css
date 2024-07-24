@@ -41,6 +41,15 @@
   background-color: #6ccd4a;
 }
 
+.giveUp {
+  font-size: 18px;
+  display: flex;
+  background-color: #d9534f;
+  margin: 20px;
+  min-height: 40px;
+  align-items: center;
+}
+
 .correctElement {
   color: #6ccd4a;
 }

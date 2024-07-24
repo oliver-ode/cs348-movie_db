@@ -1,8 +1,8 @@
 import React from 'react';
 
-export default function Row({isCorrect, guess, title, year, yearProximity, casts, genres, tags}) {
+export default function Row({isCorrect, giveUp, guess, title, year, yearProximity, casts, genres, tags}) {
     return (
-        <div className={isCorrect?'row correct':'row'}>
+        <div className={isCorrect?'row correct':giveUp?'giveUp':'row'}>
             <div>{guess}</div>
             <div>{title}</div>
             <div className={isCorrect ? '' : yearProximity=='correct' ? 'correctElement' : ''}>
