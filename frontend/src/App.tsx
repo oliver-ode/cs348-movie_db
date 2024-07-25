@@ -26,8 +26,11 @@ function App() {
     .then((response) => response.json())
     .then((data) => {
       for (let i = 0; i < data.length; i++) {
-        if (data[i]['isCorrect']) {
+        if (data[i]['isCorrect'] || data[i]['giveUp']) {
           setMovieGuessFormat(data[i]['title'].split('').join(' '));
+          setIsSearchContainerHidden(true);
+        }
+        if (data[i]['maxGuessesReached'] == 1) {
           setIsSearchContainerHidden(true);
         }
       }
@@ -49,52 +52,26 @@ function App() {
     })
     .then((response) => response.json())
     .then((data) => {
-      if (data['result'] === 'over10') {
-        setIsSearchContainerHidden(true);
-        //alert('failed to insert - probably over ')
-      } else {
-        if (data['isCorrect'] == 1) {
-          setMovieGuessFormat(data['title'].split('').join(' '));
-          setIsSearchContainerHidden(true)
-        }
-        addGuessedRow(data);
-      }
+      addGuessedRow(data);
       setSearchValue(''); // Clear the search bar after making a guess
+      if (data['isCorrect'] == 1) {
+        setMovieGuessFormat(data['title'].split('').join(' '));
+        setIsSearchContainerHidden(true)
+      }
+      if (data['maxGuessesReached'] == 1) {
+        setIsSearchContainerHidden(true);
+        giveUpClick();
+      }
     });
   };
-  
-
-  // const giveUpClick = () => {
-  //   setIsSearchContainerHidden(true);
-  //   fetch('http://localhost:4000/giveUp?' + new URLSearchParams({'userID': cookies.get('userID')}))
-  //   .then(response => response.json())
-  //   .then((data) => {
-  //     console.log(data);
-  //   })
-  //   .catch(err => {
-  //     console.log(err);
-  //   });
-
-  // };
 
   const giveUpClick = () => {
     setIsSearchContainerHidden(true);
     fetch('http://localhost:4000/giveUp?' + new URLSearchParams({'userID': cookies.get('userID')}))
       .then(response => response.json())
       .then((data) => {
-        if (data.length > 0) {
-          addGuessedRow({
-            isCorrect: false,
-            giveUp: true,
-            guess: 0, // Assign a value that indicates it's the give-up row
-            title: data[0].title,
-            year: data[0].year,
-            yearProximity: data[0].yearProximity,
-            casts: data[0].casts.split(', ').map((actorName: string) => ({ actorName, proximity: 'same' })), // Specify type for actorName
-            genres: data[0].genres.split(', ').map((genre: string) => ({ genre, proximity: 'same' })), // Specify type for genre
-            tags: data[0].tags // Assuming no tags are available for give-up
-          });
-        }
+        addGuessedRow(data);
+        setMovieGuessFormat(data['title'].split('').join(' '));
       })
       .catch(err => {
         console.log(err);
@@ -102,11 +79,11 @@ function App() {
   };
   
   function addGuessedRow(data: {isCorrect: boolean; giveUp: boolean; guess: number; title: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }) {
-      setGuessRows([Row(data), ...guessRows]);
+    setGuessRows(oldRows => [Row(data), ...oldRows]);
   }
 
   function addGuessedRows(data: [{isCorrect: boolean; giveUp: boolean; guess: number; title: string; year: number; yearProximity: string; casts: []; genres: string; tags: []; }]) {
-    setGuessRows([...data.sort((a, b) => a.guess < b.guess ? 1 : -1).map((e) => Row(e)), ...guessRows]);
+    setGuessRows(oldRows => [...data.sort((a, b) => !a.guess ? -1 : a.guess < b.guess ? 1 : -1).map((e) => Row(e)), ...guessRows]);
   }
 
   return (

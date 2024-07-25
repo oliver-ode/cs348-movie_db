@@ -41,6 +41,10 @@
   background-color: #6ccd4a;
 }
 
+.regular {
+  background-color: #000000;
+}
+
 .giveUp {
   font-size: 18px;
   display: flex;
