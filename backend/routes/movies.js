@@ -165,9 +165,11 @@ Router.get("/getExistingGuesses", (req, res) => {
                     '' AS studio, \
                     m.releaseYear AS year, \
                     CASE \
-                      WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) > m.releaseYear THEN 'low' \
+                      WHEN ((SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) - m.releaseYear) > 5  THEN 'high' \
+                      WHEN ((SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) - m.releaseYear) <= 5 AND ((SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) - m.releaseYear > 0) THEN 'yellowhigh'\
                       WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) = m.releaseYear THEN 'correct' \
-                      WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) < m.releaseYear THEN 'high' \
+                      WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) - m.releaseYear < -5 THEN 'low' \
+                      WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) - m.releaseYear >= -5 and (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) - m.releaseYear < 0 THEN 'yellowlow' \
                     END AS yearProximity, \
                     GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts, \
                     GROUP_CONCAT(DISTINCT ge.genre ORDER BY ge.genre SEPARATOR ', ') AS genres \
@@ -460,10 +462,12 @@ Router.post("/makeGuess", (req, res) => {
                 '' AS studio, \
                 m.releaseYear AS year, \
                 CASE \
-                  WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) > m.releaseYear THEN 'low' \
-                  WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) = m.releaseYear THEN 'correct' \
-                  WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) < m.releaseYear THEN 'high' \
-                END AS yearProximity, \
+                      WHEN ((SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) - m.releaseYear) > 5  THEN 'high' \
+                      WHEN ((SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) - m.releaseYear) <= 5 AND ((SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) - m.releaseYear > 0) THEN 'yellowhigh'\
+                      WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) = m.releaseYear THEN 'correct' \
+                      WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) - m.releaseYear < -5 THEN 'low' \
+                      WHEN (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) - m.releaseYear >= -5 and (SELECT dmy.releaseYear FROM daily_movie_year dmy LIMIT 1) - m.releaseYear < 0 THEN 'yellowlow' \
+                    END AS yearProximity, \
                 GROUP_CONCAT(DISTINCT a.actorName ORDER BY a.actorName SEPARATOR ', ') AS casts, \
                 GROUP_CONCAT(DISTINCT ge.genre ORDER BY ge.genre SEPARATOR ', ') AS genres \
               FROM mlMoviesWithYears m \

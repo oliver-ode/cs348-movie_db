@@ -5,8 +5,8 @@ export default function Row({isCorrect, giveUp, guess, title, year, yearProximit
         <div className={isCorrect ? 'row correct' : giveUp ? 'row giveUp' : 'row'}>
             <div>{guess ? guess : ''}</div>
             <div>{title}</div>
-            <div className={isCorrect||giveUp ? '' : yearProximity == 'correct' ? 'correctElement' : ''}>
-                {yearProximity == 'high' || yearProximity == 'low' ? (yearProximity == 'high' ? '↓' : '↑') : ''} {year}
+            <div className={isCorrect||giveUp ? '' : yearProximity == 'correct' ? 'correctElement' : ( yearProximity == 'yellowlow' ? 'closeElement' : ( yearProximity == 'yellowhigh' ? 'closeElement' : '')) }>
+                {yearProximity == 'high' || yearProximity == 'yellowhigh' ? '↑' : (yearProximity == 'low' || yearProximity == 'yellowlow' ? '↓' : '')} {year}
             </div>
             <div className="scrollable-container">
                 {casts.map((c, index) => <p key={index} className={isCorrect||giveUp ? '' : c.proximity == 'same' ? 'correctElement' : c.proximity == 'adjacent' ? 'closeElement' : ''}>{c.actorName}</p>)}
