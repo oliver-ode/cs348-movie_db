@@ -37,8 +37,9 @@ To run the sql server: sudo /usr/local/mysql/bin/mysql -u root -p
 
 
 ## How to create database schema (Production Data)
-sudo /usr/local/mysql/bin/mysql -u root -p --local-infile=1
-`SELECT @@secure_file_priv;`
+`mysql -u movieapp -p --local-infile=1` 
+
+Password is : pass1234 (as set up above)
 
 ```sql
 SOURCE production_db/createdb.sql
