@@ -1,29 +1,28 @@
+SELECT COUNT(*) totalGuesses FROM guesses WHERE challengeDate=CURDATE() AND userCookie=?;
 
--- Create the stored procedure to insert a user guess
-DELIMITER //
-
-CREATE PROCEDURE InsertUserGuess(
-    IN p_challengeDate DATE,
-    IN p_userCookie CHAR(36),
-    IN p_mlID INT
-)
-BEGIN
-    DECLARE guessCount INT;
-
-    -- Check the number of guesses the user has made for the given date
-    SELECT COUNT(*) INTO guessCount
-    FROM guesses
-    WHERE challengeDate = p_challengeDate
-      AND userCookie = p_userCookie;
-
-    -- If the user has made less than 10 guesses, insert the new guess
-    IF guessCount < 10 THEN
-        INSERT INTO guesses (challengeDate, userCookie, guessNumber, mlID)
-        VALUES (p_challengeDate, p_userCookie, guessCount + 1, p_mlID);
-    ELSE
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'User has exceeded the maximum number of guesses for the day';
-    END IF;
-END //
-
-DELIMITER ;
+INSERT INTO guesses VALUES (
+    CURDATE(), 
+    ?, 
+    (
+        SELECT mgn FROM (
+            SELECT COUNT(*)+1 mgn 
+            FROM guesses 
+            WHERE userCookie=? AND challengeDate=CURDATE() AND guessNumber>0) t), ?)
+SELECT
+    CASE
+        WHEN 
+            (SELECT dm.selectID FROM dailyMovies dm WHERE dm.challengeDate = CURDATE()) 
+            = 
+            (SELECT tm.selectID FROM guesses g 
+            JOIN mlMoviesWithYears ml ON g.mlID = ml.mlID 
+            JOIN idLinks idl ON ml.mlID = idl.mlID 
+            JOIN tmdbPopularMovies tm ON idl.tmdbID = tm.tmdbID 
+            WHERE g.guessNumber = 
+                (SELECT COUNT(gs.guessNumber) 
+                FROM guesses gs WHERE gs.challengeDate = CURDATE() AND 
+                    userCookie = ?) AND 
+                    g.userCookie = ? AND 
+                    g.challengeDate = CURDATE()) 
+        THEN 1
+    ELSE 0
+ END AS isCorrect;
