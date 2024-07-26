@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import SearchBar from './SearchComp';
 import logo from './assets/FlickFindLogo.png';
 import Row from './Row'
+import HelpModal from './HelpModal';
 
 function App() {
   const cookies = new Cookies(null, { path: '/' });
@@ -16,6 +17,7 @@ function App() {
   const [guessRows, setGuessRows] = useState<React.ReactElement[]>([]);
   const [isSearchContainerHidden, setIsSearchContainerHidden] = useState(false);
   const [searchValue, setSearchValue] = useState('');
+  const [isHelpModalVisible, setIsHelpModalVisible] = useState(false); // State for help modal visibility
 
   useEffect(() => {
     fetch('http://localhost:4000/getFormat')
@@ -90,6 +92,7 @@ function App() {
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="Flick Find Logo" />
+        <button className="help-button" onClick={() => setIsHelpModalVisible(true)}>?</button>
       </header>
       <p style={{whiteSpace: 'pre'}}>{movieGuessFormat}</p>
       <div className="search-container" style={{ display: isSearchContainerHidden ? 'none' : 'block' }}>
@@ -111,6 +114,7 @@ function App() {
         </div>
         {guessRows}
       </div>
+      {isHelpModalVisible && <HelpModal onClose={() => setIsHelpModalVisible(false)} />} {/* Help Modal */}
     </div>
   );
 }
